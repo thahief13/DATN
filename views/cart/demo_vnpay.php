@@ -6,7 +6,7 @@ if (isset($_SESSION['vnp_PaymentId'])) {
     if ($db->connect_error) {
         die('DB Error');
     }
-    $stmt = $db->prepare("UPDATE payment SET Status = 'paid', UpdatedAt = NOW() WHERE Id = ? AND Status = 'pending'");
+   $stmt = $db->prepare("UPDATE payment SET Status = 'pending', UpdatedAt = NOW() WHERE Id = ? AND Status = 'pending'");
     $stmt->bind_param("i", $_SESSION['vnp_PaymentId']);
     $result = $stmt->execute();
     $stmt->close();

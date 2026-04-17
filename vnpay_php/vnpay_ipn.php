@@ -59,7 +59,7 @@ try {
                 if ($inputData['vnp_ResponseCode'] == '00') {
                     // Update status
                     $db = new mysqli($hostname, $username, $password, $dbname, $port);
-                    $stmt = $db->prepare("UPDATE payment SET Status = 'paid', UpdatedAt = NOW() WHERE Id = ?");
+                    $stmt = $db->prepare("UPDATE payment SET Status = 'pending', UpdatedAt = NOW() WHERE Id = ?");
                     $stmt->bind_param("i", $paymentId);
                     $stmt->execute();
                     $stmt->close();

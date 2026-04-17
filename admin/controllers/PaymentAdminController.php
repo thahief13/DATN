@@ -42,7 +42,8 @@ class PaymentAdminController
         global $hostname, $username, $password, $dbname, $port;
         $conn = new mysqli($hostname, $username, $password, $dbname, $port);
         
-        $stmt = $conn->prepare("UPDATE payment SET Status = ?, UpdatedAt = NOW() WHERE Id = ?");
+    
+        $stmt = $conn->prepare("UPDATE payment SET Status = ? WHERE Id = ?");
         $stmt->bind_param("si", $status, $paymentId);
         $result = $stmt->execute();
         $stmt->close();
@@ -56,9 +57,15 @@ class PaymentAdminController
         global $hostname, $username, $password, $dbname, $port;
         $conn = new mysqli($hostname, $username, $password, $dbname, $port);
         
-        $sql = "SELECT pd.ProductId, pd.Price, pd.Quantity, p.Title, p.Img 
+        // SỬA LỖI & NÂNG CẤP: 
+        // 1. Phải JOIN qua StoreProductId thay vì ProductId
+        // 2. Lấy thêm cột IsAvailable từ bảng storeproduct để biết chi nhánh còn món này không
+        $sql = "SELECT pd.Price, pd.Quantity as OrderQty, 
+                       p.Title, p.Img, 
+                       sp.IsAvailable 
                 FROM paymentdetail pd 
-                JOIN product p ON pd.ProductId = p.Id 
+                JOIN storeproduct sp ON pd.StoreProductId = sp.Id 
+                JOIN product p ON sp.ProductId = p.Id 
                 WHERE pd.PaymentId = ?";
         
         $stmt = $conn->prepare($sql);

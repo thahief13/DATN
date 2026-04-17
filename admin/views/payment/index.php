@@ -297,19 +297,18 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
 
 
 
-        // 7. KHỞI TẠO KHI LOAD TRANG
-        document.addEventListener('DOMContentLoaded', () => {
+        /// 7. KHỞI TẠO KHI LOAD TRANG (ĐÃ SỬA LỖI F5)
+        function initAdminPayment() {
             populateStoreFilter();
             loadPayments();
-        });
+        }
 
-        // Lắng nghe sự kiện để lọc realtime (không cần bấm nút tìm kiếm cũng được)
-        document.getElementById('statusFilter').addEventListener('change', loadPayments);
-        document.getElementById('storeFilter').addEventListener('change', loadPayments);
-        document.getElementById('searchInput').addEventListener('keyup', (e) => {
-            // Có thể dùng debounce nếu data quá lớn, ở đây lọc realtime
-            loadPayments();
-        });
+        // Kiểm tra xem trình duyệt đã load xong chưa, nếu xong rồi thì chạy luôn!
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAdminPayment);
+        } else {
+            initAdminPayment(); 
+        }
     </script>
 </body>
 </html>

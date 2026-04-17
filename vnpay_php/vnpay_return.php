@@ -63,7 +63,7 @@ session_start();
 
                         if ($_GET['vnp_ResponseCode'] == '00') {
                             // 1. CẬP NHẬT TRẠNG THÁI ĐÃ THANH TOÁN
-                            $stmt = $conn->prepare("UPDATE payment SET Status = 'paid' WHERE Id = ?");
+                            $stmt = $conn->prepare("UPDATE payment SET Status = 'pending' WHERE Id = ?");
                             $stmt->bind_param("i", $paymentId);
                             $stmt->execute();
                             $stmt->close();

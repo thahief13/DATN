@@ -51,26 +51,17 @@ $customerName = trim(($customer->FirstName ?? '') . ' ' . ($customer->LastName ?
 $customerPhone = preg_replace('/\D/', '', $customer->Phone ?? '');
 $customerAddress = $customer->Address ?? '';
 $toDistrict = (int)($customer->DistrictId ?? 0);
-$toWard = $customer->WardCode ?? '';
+$toWard = trim((string)($customer->WardCode ?? ''));
 
 $store = $storeController->getStoreById($storeId);
 $storeName = $store->StoreName ?? 'Chi nhánh';
 $storePhone = preg_replace('/\D/', '', $store->Phone ?? '');
 $storeDistrict = (int)($store->DistrictId ?? 1548); 
-$storeWard = $store->WardCode ?? '410110'; 
+$storeWard = trim((string)($store->WardCode ?? '410110')); 
 
 $ghn_error = '';
-if (!$storeDistrict || !$storeWard) {
-    $ghn_error = '<div class="alert alert-warning text-center mb-4">Cảnh báo: Thông tin quận/phường chi nhánh chưa đầy đủ. Sử dụng giá trị mặc định Nha Trang. Phí ship có thể không chính xác.</div>';
-}
-
-define('GHN_TOKEN', 'ee236453-32f7-11f1-83ac-625f4e0bad60');
-define('GHN_SHOP_ID', 5267789);
-define('GHN_BASE', 'https://dev-online-gateway.ghn.vn/shiip/public-api/v2');
-
 $storeTotal = 0;
 $totalWeight = 0;
-$products = [];
 
 // Khởi tạo DB tạm để lấy DiscountPercent
 $dbTemp = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -78,7 +69,6 @@ $dbTemp = new mysqli($hostname, $username, $password, $dbname, $port);
 foreach ($storeCarts as $cart) {
     $product = $productController->getProductById($cart->ProductId);
     
-    // Logic Lấy Discount
     $discount = 0;
     $resSP = $dbTemp->query("SELECT DiscountPercent FROM storeproduct WHERE ProductId = " . (int)$cart->ProductId . " AND StoreId = " . (int)$storeId);
     if ($resSP && $rowSP = $resSP->fetch_assoc()) {
@@ -86,68 +76,91 @@ foreach ($storeCarts as $cart) {
     }
     
     $basePrice = (int)($product->Price ?? 0);
-    $finalPrice = (int)($basePrice * (1 - $discount / 100)); // Áp dụng giảm giá
+    $finalPrice = (int)($basePrice * (1 - $discount / 100));
     
     $weight = (int)($product->Weight ?? 500);
+    if ($weight <= 0) $weight = 500;
+
     $storeTotal += $finalPrice * $cart->Quantity;
     $totalWeight += $weight * $cart->Quantity;
-    
-    $products[] = [
-        'name' => $product->Title ?? 'Sản phẩm',
-        'code' => (string)($product->Id ?? '0'),
-        'quantity' => (int)$cart->Quantity,
-        'price' => $finalPrice,
-        'weight' => $weight
-    ];
 }
+$dbTemp->close();
 
 if ($storeTotal <= 0) die('<div class="alert alert-danger text-center">Tổng giá trị đơn hàng không hợp lệ!</div>');
-if ($totalWeight <= 0) $totalWeight = 500;
 
-$payload = [
+// ==========================================
+// TÍCH HỢP API GIAO HÀNG NHANH (GHN) - ĐÃ CẬP NHẬT
+// ==========================================
+define('GHN_TOKEN', 'ee236453-32f7-11f1-83ac-625f4e0bad60'); 
+define('GHN_SHOP_ID', 6372158); 
+
+$storeShippingFee = 15000; 
+$storeLeadtime = date('H:i d/m/Y', strtotime('+30 minutes'));
+$ghn_error = '';
+
+// BƯỚC CỨU HỘ ĐỊA CHỈ: Nếu DB của khách chưa có Mã Quận/Phường (bằng 0), tự động gán về Trung tâm Nha Trang để API chạy được!
+if ($toDistrict <= 0 || empty($toWard)) {
+    $toDistrict = 1548;   // Mã TP Nha Trang trên GHN
+    $toWard = '410110';   // Mã Phường Lộc Thọ trên GHN
+    $ghn_error = '';
+}
+
+// 1. GỌI API TÍNH PHÍ VẬN CHUYỂN (/fee)
+$feePayload = [
+    "service_type_id" => 2,
     "from_district_id" => $storeDistrict,
     "from_ward_code" => $storeWard,
     "to_district_id" => $toDistrict,
     "to_ward_code" => $toWard,
     "weight" => $totalWeight,
-    "length" => 20,
-    "width" => 20,
-    "height" => 20,
-    "insurance_value" => $storeTotal,
-    "service_type_id" => 2,
-    "payment_type_id" => 2,
-    "cod_amount" => $storeTotal,
-    "from_name" => $storeName,
-    "from_phone" => $storePhone,
-    "from_address" => $store->Address ?? '',
-    "to_name" => $customerName,
-    "to_phone" => $customerPhone,
-    "to_address" => $customerAddress,
-    "required_note" => "KHONGCHOXEMHANG",
-    "items" => $products
+    "insurance_value" => $storeTotal
 ];
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, GHN_BASE . "/shipping-order/preview");
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
+$chFee = curl_init('https://online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee');
+curl_setopt($chFee, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($chFee, CURLOPT_POST, true);
+curl_setopt($chFee, CURLOPT_HTTPHEADER, [
     "Token: " . GHN_TOKEN,
     "ShopId: " . GHN_SHOP_ID,
     "Content-Type: application/json"
 ]);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-$response = curl_exec($ch);
-curl_close($ch);
+curl_setopt($chFee, CURLOPT_POSTFIELDS, json_encode($feePayload));
+$resFee = json_decode(curl_exec($chFee), true);
+curl_close($chFee);
 
-$res = json_decode($response, true);
-$storeShippingFee = 0;
-$storeLeadtime = 'Không xác định';
-if (isset($res['code']) && $res['code'] == 200 && isset($res['data'])) {
-    $storeShippingFee = $res['data']['total_fee'] ?? 0;
-    $leadtime = $res['data']['expected_delivery_time'] ?? '';
-    if ($leadtime) $storeLeadtime = date('Y-m-d H:i', strtotime($leadtime));
+if (isset($resFee['code']) && $resFee['code'] == 200) {
+    $storeShippingFee = $resFee['data']['total'] ?? 15000;
+} else {
+    // In lỗi chi tiết của GHN ra màn hình để dễ Debug
+    $ghn_error .= '<div class="alert alert-danger text-center mb-2">Lỗi tính phí GHN: ' . htmlspecialchars($resFee['message'] ?? 'Thất bại') . '</div>';
 }
+
+// 2. GỌI API TÍNH THỜI GIAN GIAO HÀNG (/leadtime)
+$timePayload = [
+    "from_district_id" => $storeDistrict,
+    "from_ward_code" => $storeWard,
+    "to_district_id" => $toDistrict,
+    "to_ward_code" => $toWard,
+    "service_id" => 53320 
+];
+
+$chTime = curl_init('https://online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/leadtime');
+curl_setopt($chTime, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($chTime, CURLOPT_POST, true);
+curl_setopt($chTime, CURLOPT_HTTPHEADER, [
+    "Token: " . GHN_TOKEN,
+    "ShopId: " . GHN_SHOP_ID,
+    "Content-Type: application/json"
+]);
+curl_setopt($chTime, CURLOPT_POSTFIELDS, json_encode($timePayload));
+$resTime = json_decode(curl_exec($chTime), true);
+curl_close($chTime);
+
+if (isset($resTime['code']) && $resTime['code'] == 200) {
+    $timestamp = $resTime['data']['leadtime'] ?? time();
+    $storeLeadtime = date('H:i d/m/Y', $timestamp);
+}
+
 
 $grandTotal = $storeTotal + $storeShippingFee;
 ?>
@@ -156,17 +169,19 @@ $grandTotal = $storeTotal + $storeShippingFee;
 
 <div class="container" style="padding: 60px 20px; max-width: 1200px; margin: 0 auto;">
     <div class="card" style="border-radius: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); padding: 40px; background: linear-gradient(to bottom, #ffffff, #f9f9f9);">
-        <h1 style="text-align: center; color: #333; font-family: 'Arial', sans-serif; margin-bottom: 40px; font-weight: bold; letter-spacing: 1px;">Thanh toán - <?= htmlspecialchars($storeName) ?></h1>
+        <h1 style="text-align: center; color: #333; font-family: 'Arial', sans-serif; margin-bottom: 20px; font-weight: bold; letter-spacing: 1px;">Thanh toán - <?= htmlspecialchars($storeName) ?></h1>
+
+        <?= $ghn_error ?>
 
         <div style="display: flex; flex-wrap: wrap; gap: 30px; margin-bottom: 40px; justify-content: space-between;">
             <div style="flex: 1; min-width: 300px; background: #f8f9fa; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                <h3 style="color: #ffb300; margin-bottom: 20px; font-size: 22px;">Chi nhánh</h3>
+                <h3 style="color: #ffb300; margin-bottom: 20px; font-size: 22px;">Chi nhánh gửi</h3>
                 <p><strong>Tên:</strong> <?= htmlspecialchars($storeName) ?></p>
                 <p><strong>Điện thoại:</strong> <?= htmlspecialchars($storePhone) ?></p>
                 <p><strong>Địa chỉ:</strong> <?= htmlspecialchars($store->Address ?? '') ?></p>
             </div>
             <div style="flex: 1; min-width: 300px; background: #f8f9fa; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                <h3 style="color: #ffb300; margin-bottom: 20px; font-size: 22px;">Khách hàng</h3>
+                <h3 style="color: #ffb300; margin-bottom: 20px; font-size: 22px;">Người nhận</h3>
                 <p><strong>Tên:</strong> <?= htmlspecialchars($customerName) ?></p>
                 <p><strong>Địa chỉ:</strong> <?= htmlspecialchars($customerAddress) ?></p>
                 <p><strong>Điện thoại:</strong> <?= htmlspecialchars($customerPhone) ?></p>
@@ -177,7 +192,6 @@ $grandTotal = $storeTotal + $storeShippingFee;
             <table style="width: 100%; border-collapse: collapse; text-align: center; min-width: 800px; background: #fff;">
                 <thead style="background: #ffb300; color: white; font-weight: bold; font-size: 16px;">
                     <tr>
-                        <th>Ảnh</th>
                         <th>Sản phẩm</th>
                         <th>Đơn giá</th>
                         <th>Số lượng</th>
@@ -186,31 +200,20 @@ $grandTotal = $storeTotal + $storeShippingFee;
                 </thead>
                 <tbody>
                     <?php 
+                    $dbTemp = new mysqli($hostname, $username, $password, $dbname, $port);
                     foreach ($storeCarts as $cart):
                         $product = $productController->getProductById($cart->ProductId);
-                        
                         $discount = 0;
                         $resSP = $dbTemp->query("SELECT DiscountPercent FROM storeproduct WHERE ProductId = " . (int)$cart->ProductId . " AND StoreId = " . (int)$storeId);
-                        if ($resSP && $rowSP = $resSP->fetch_assoc()) {
-                            $discount = (int)$rowSP['DiscountPercent'];
-                        }
+                        if ($resSP && $rowSP = $resSP->fetch_assoc()) $discount = (int)$rowSP['DiscountPercent'];
                         
                         $basePrice = $product->Price;
                         $finalPrice = $basePrice * (1 - $discount / 100);
                         $subtotal = $finalPrice * $cart->Quantity;
                     ?>
                         <tr>
-                            <td><img src="../../img/SanPham/<?= htmlspecialchars($product->Img) ?>" style="width:100px; height:100px; object-fit:cover; border-radius:12px;"></td>
-                            <td><?= htmlspecialchars($product->Title) ?></td>
-                            <td>
-                                <?php if($discount > 0): ?>
-                                    <span style="text-decoration: line-through; color: #999; font-size: 13px;"><?= number_format($basePrice, 0, ',', '.') ?> VNĐ</span><br>
-                                    <span style="color: #ff4444; font-weight: bold;"><?= number_format($finalPrice, 0, ',', '.') ?> VNĐ</span>
-                                    <span style="background: #ff4444; color: white; padding: 2px 5px; border-radius: 5px; font-size: 11px;">-<?= $discount ?>%</span>
-                                <?php else: ?>
-                                    <?= number_format($finalPrice, 0, ',', '.') ?> VNĐ
-                                <?php endif; ?>
-                            </td>
+                            <td style="padding: 15px;"><?= htmlspecialchars($product->Title) ?></td>
+                            <td><?= number_format($finalPrice, 0, ',', '.') ?> VNĐ</td>
                             <td><?= $cart->Quantity ?></td>
                             <td style="font-weight:bold; color:#ffb300;"><?= number_format($subtotal, 0, ',', '.') ?> VNĐ</td>
                         </tr>
@@ -219,15 +222,19 @@ $grandTotal = $storeTotal + $storeShippingFee;
             </table>
         </div>
 
-        <div style="margin-top: 40px; background: #f8f9fa; padding: 25px; border-radius: 15px; text-align: right;">
-            <p>Phí vận chuyển: <strong><?= number_format($storeShippingFee, 0, ',', '.') ?> VNĐ</strong></p>
-            <p>Tổng cộng: <strong><?= number_format($grandTotal, 0, ',', '.') ?> VNĐ</strong></p>
-            <p>Thời gian dự kiến: <strong><?= $storeLeadtime ?></strong></p>
+        <div style="margin-top: 40px; background: #fff7e6; border: 2px solid #ffb300; padding: 25px; border-radius: 15px; text-align: right;">
+            <p style="font-size: 16px; margin-bottom: 10px;">Tổng tiền hàng: <strong><?= number_format($storeTotal, 0, ',', '.') ?> VNĐ</strong></p>
+            <p style="font-size: 16px; margin-bottom: 10px; color: #d35400;">Phí vận chuyển (GHN): <strong>+ <?= number_format($storeShippingFee, 0, ',', '.') ?> VNĐ</strong></p>
+            <hr style="border-top: 1px dashed #ccc; margin: 15px 0;">
+            <p style="font-size: 22px; color: #c0392b;">Tổng thanh toán: <strong><?= number_format($grandTotal, 0, ',', '.') ?> VNĐ</strong></p>
+            <p style="font-size: 15px; color: #27ae60; margin-top: 5px;"><i class="fa fa-truck"></i> Thời gian giao hàng: <strong><?= $storeLeadtime ?></strong></p>
         </div>
+        
         <div id="toastContainer" style="position: fixed;top: 20px;left: 50%;transform: translateX(-50%); z-index: 9999;"></div>
 
         <form id="checkoutForm" method="POST" style="margin-top: 30px; display:flex; flex-direction: column; gap:15px;">
             <input type="hidden" name="storeId" value="<?= $storeId ?>">
+            <input type="hidden" name="shippingFee" value="<?= $storeShippingFee ?>">
             <input type="hidden" name="grandTotal" value="<?= number_format((float)$grandTotal, 2, '.', '') ?>">
             <input type="hidden" name="vnp_order_id" value="<?= time() ?>">
             <input type="hidden" name="vnp_amount" value="<?= number_format((float)$grandTotal, 2, '.', '') ?>">
@@ -250,7 +257,7 @@ $grandTotal = $storeTotal + $storeShippingFee;
                 </label>
             </div>
 
-            <button type="button" id="checkoutBtn" class="checkoutBtn">Thanh toán <?= number_format($grandTotal, 0, ',', '.') ?> VNĐ</button>
+            <button type="button" id="checkoutBtn" class="checkoutBtn" style="width: 100%; max-width: 400px; margin: 0 auto; display: block;">Đặt hàng (<?= number_format($grandTotal, 0, ',', '.') ?> VNĐ)</button>
         </form>
 
         <style>
@@ -286,12 +293,13 @@ $grandTotal = $storeTotal + $storeShippingFee;
                 const form = document.getElementById('checkoutForm');
 
                 if (method === 'cod') {
-                    showToast('Đặt hàng thành công! Thanh toán khi nhận hàng.');
+                    showToast('Đang xử lý đơn hàng...');
                     form.action = 'checkout_process.php';
-                    setTimeout(() => form.submit(), 3000);
+                    setTimeout(() => form.submit(), 1500);
                 } else if (method === 'bank') {
+                    showToast('Đang chuyển hướng VNPay...', 'success', 2000);
                     form.action = 'checkout_process.php';
-                    form.submit();
+                    setTimeout(() => form.submit(), 1000);
                 }
             });
         </script>

@@ -1,38 +1,30 @@
 <?php
 session_start();
 
-// 1. KIỂM TRA QUYỀN TRUY CẬP (Rất quan trọng)
-// Dù có comment "parent index.php already checked", nhưng nếu ai đó truy cập trực tiếp file này (VD: domain.com/.../detail.php?id=1) 
-// thì họ sẽ vượt qua được. Tốt nhất nên có 1 dòng check session ở đây.
-// Ví dụ: if (!isset($_SESSION['admin_logged_in'])) { die('Truy cập bị từ chối'); }
-
 $paymentId = intval($_GET['id'] ?? 0);
 
 if ($paymentId <= 0) {
     die('Mã đơn hàng không hợp lệ.');
 }
 
-// 2. NẠP FILE REQUIRE MỘT LẦN TRÊN CÙNG
 require_once '../../../admin/controllers/PaymentAdminController.php';
 require_once '../../../admin/models/PaymentAdmin.php';
 
-// 3. LẤY DỮ LIỆU
 $paymentController = new PaymentAdminController();
 $paymentDetails = $paymentController->getPaymentDetail($paymentId);
-// Đảm bảo $paymentDetails luôn là một mảng để hàm count() hoặc foreach bên dưới không bị lỗi
+
 if (!is_array($paymentDetails)) {
     $paymentDetails = []; 
 }
 
 $paymentInfo = (new PaymentAdmin())->getPaymentById($paymentId);
 
-// 4. KIỂM TRA TỒN TẠI DỮ LIỆU (Logic quan trọng nhất bị thiếu)
-// Nếu truyền ID đúng định dạng số nhưng không có trong Database, $paymentInfo sẽ trả về null/false.
-// Việc gọi $paymentInfo->Status ở dưới HTML sẽ gây lỗi Fatal Error (Attempt to read property on bool/null).
 if (!$paymentInfo) {
     die('<div style="color:red; text-align:center; margin-top:50px;"><h3>Không tìm thấy thông tin đơn hàng này trong hệ thống!</h3></div>');
 }
 
+// Biến cờ: Kiểm tra xem có sản phẩm nào trong đơn bị hết hàng không
+$canFulfill = true; 
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -48,7 +40,7 @@ if (!$paymentInfo) {
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <div class="card shadow-lg border-0">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header bg-dark text-white">
                         <div class="row align-items-center">
                             <div class="col">
                                 <h3 class="mb-0">
@@ -59,7 +51,6 @@ if (!$paymentInfo) {
                             </div>
                             <div class="col-auto">
                                 <?php 
-                                    // Chuyển status về chữ thường để so sánh chính xác hơn, tránh lỗi gõ hoa/thường trong DB
                                     $status = mb_strtolower($paymentInfo->Status ?? '');
                                     $badgeClass = 'warning';
                                     if ($status === 'đã giao' || $status === 'thành công') {
@@ -68,8 +59,8 @@ if (!$paymentInfo) {
                                         $badgeClass = 'danger';
                                     }
                                 ?>
-                                <span class="badge fs-6 bg-<?php echo $badgeClass; ?>">
-                                    <?php echo htmlspecialchars($paymentInfo->Status ?? 'Chưa xác định'); ?>
+                                <span class="badge fs-5 bg-<?php echo $badgeClass; ?>">
+                                    <?php echo mb_strtoupper($paymentInfo->Status ?? 'Chưa xác định', 'UTF-8'); ?>
                                 </span>
                             </div>
                         </div>
@@ -79,14 +70,12 @@ if (!$paymentInfo) {
                         <div class="row g-0">
                             <div class="col-md-6 p-4 border-end">
                                 <h5><i class="fas fa-user text-primary me-2"></i>Thông tin khách hàng</h5>
-                                <p class="mb-1"><strong>ID:</strong> <?php echo htmlspecialchars($paymentInfo->CustomerId ?? 'N/A'); ?></p>
                                 <p class="mb-1"><strong>Tên:</strong> <?php echo htmlspecialchars($paymentInfo->CustomerName ?? 'N/A'); ?></p>
                                 <p class="mb-1"><strong>SĐT:</strong> <?php echo htmlspecialchars($paymentInfo->CustomerPhone ?? 'N/A'); ?></p>
                                 <p class="mb-0"><strong>Địa chỉ:</strong> <?php echo htmlspecialchars($paymentInfo->CustomerAddress ?? 'N/A'); ?></p>
                             </div>
                             <div class="col-md-6 p-4">
-                                <h5><i class="fas fa-store text-success me-2"></i>Thông tin cửa hàng</h5>
-                                <p class="mb-1"><strong>ID:</strong> <?php echo htmlspecialchars($paymentInfo->StoreId ?? 'N/A'); ?></p>
+                                <h5><i class="fas fa-store text-success me-2"></i>Chi nhánh phục vụ</h5>
                                 <p class="mb-1"><strong>Tên:</strong> <?php echo htmlspecialchars($paymentInfo->StoreName ?? 'N/A'); ?></p>
                                 <p class="mb-1"><strong>SĐT:</strong> <?php echo htmlspecialchars($paymentInfo->StorePhone ?? 'N/A'); ?></p>
                                 <p class="mb-0"><strong>Địa chỉ:</strong> <?php echo htmlspecialchars($paymentInfo->StoreAddress ?? 'N/A'); ?></p>
@@ -95,28 +84,41 @@ if (!$paymentInfo) {
 
                         <div class="p-4 border-top">
                             <h5 class="mb-3">
-                                <i class="fas fa-boxes me-2"></i>Sản phẩm trong đơn (<?php echo count($paymentDetails); ?>)
+                                <i class="fas fa-boxes me-2"></i>Sản phẩm yêu cầu (<?php echo count($paymentDetails); ?>)
                             </h5>
                             <div class="row g-3">
                                 <?php if(count($paymentDetails) > 0): ?>
                                     <?php foreach ($paymentDetails as $detail): ?>
+                                    <?php 
+                                        // Kiểm tra món này cửa hàng còn không
+                                        $isAvailable = isset($detail['IsAvailable']) ? (int)$detail['IsAvailable'] : 1;
+                                        if ($isAvailable === 0) {
+                                            $canFulfill = false; // Đánh cờ: Có món hết hàng
+                                        }
+                                    ?>
                                     <div class="col-md-6 col-lg-4">
-                                        <div class="card h-100 shadow-sm">
+                                        <div class="card h-100 shadow-sm <?php echo ($isAvailable === 0) ? 'border-danger bg-danger-subtle' : ''; ?>">
                                             <div class="card-body">
                                                 <div class="row align-items-center">
-                                                    <div class="col-3">
+                                                    <div class="col-4">
                                                         <img src="/app/img/SanPham/<?php echo htmlspecialchars($detail['Img'] ?? 'default.jpg'); ?>" 
                                                              class="img-fluid rounded" alt="<?php echo htmlspecialchars($detail['Title'] ?? 'Sản phẩm'); ?>">
-
                                                     </div>
-                                                    <div class="col-9">
+                                                    <div class="col-8">
                                                         <h6 class="mb-1"><?php echo htmlspecialchars($detail['Title'] ?? 'Tên sản phẩm trống'); ?></h6>
-                                                        <p class="small text-muted mb-1">SL: <?php echo intval($detail['Quantity'] ?? 0); ?></p>
+                                                        <p class="small text-dark fw-bold mb-1">Yêu cầu: <?php echo intval($detail['OrderQty'] ?? 0); ?> ly</p>
+                                                        
+                                                        <?php if ($isAvailable === 1): ?>
+                                                            <span class="badge bg-success mb-2">Cửa hàng: Còn món</span>
+                                                        <?php else: ?>
+                                                            <span class="badge bg-danger mb-2">Cửa hàng: HẾT MÓN</span>
+                                                        <?php endif; ?>
+
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <span class="fw-bold text-success">
                                                                 <?php 
                                                                     $price = floatval($detail['Price'] ?? 0);
-                                                                    $qty = intval($detail['Quantity'] ?? 0);
+                                                                    $qty = intval($detail['OrderQty'] ?? 0);
                                                                     echo number_format($price * $qty, 0, ',', '.'); 
                                                                 ?> ₫
                                                             </span>
@@ -133,34 +135,52 @@ if (!$paymentInfo) {
                                     </div>
                                 <?php endif; ?>
                             </div>
+
+                            <?php if (!$canFulfill && $status === 'đang xử lý'): ?>
+                                <div class="alert alert-danger mt-4 text-center">
+                                    <i class="fas fa-exclamation-triangle"></i> <strong>CẢNH BÁO:</strong> Có sản phẩm trong đơn hàng hiện đang <strong>HẾT MÓN</strong> tại chi nhánh này. Vui lòng liên hệ khách hoặc Hủy đơn!
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="p-4 bg-light border-top">
                             <div class="row align-items-center">
                                 <div class="col-md-8">
                                     <h5><i class="fas fa-info-circle me-2"></i>Tổng kết</h5>
-                                    <p class="mb-0"><strong>Phương thức thanh toán:</strong> <?php echo htmlspecialchars($paymentInfo->PaymentMethod ?? 'COD'); ?></p>
-                                    <p class="mb-0"><strong>Mã vận đơn:</strong> <?php echo htmlspecialchars($paymentInfo->TrackingCode ?? 'N/A'); ?></p>
+                                    <p class="mb-0"><strong>Thanh toán:</strong> <?php echo mb_strtoupper($paymentInfo->PaymentMethod ?? 'COD', 'UTF-8'); ?></p>
                                 </div>
                                 <div class="col-md-4 text-end">
-                                    <h4 class="text-primary mb-0">
+                                    <h3 class="text-danger mb-0">
                                         <strong><?php echo number_format(floatval($paymentInfo->Total ?? 0), 0, ',', '.'); ?> ₫</strong>
-                                    </h4>
+                                    </h3>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="card-footer bg-white border-0">
+                    <div class="card-footer bg-white border-0 py-3">
                         <div class="d-flex justify-content-between">
-                            <a href="../?page=payment" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-left me-1"></i>Quay lại danh sách
+                            <a href="../?page=payment" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Trở lại
                             </a>
 
-                            <button class="btn btn-success" onclick="confirmDelivery(<?php echo $paymentId; ?>)">
-                                <i class="fas fa-check-circle me-1"></i>Xác nhận đã giao
-                            </button>
-
+                            <?php 
+                            // Đã bổ sung thêm trạng thái 'chờ thanh toán'
+                            if ($status === 'đang xử lý' || $status === 'pending' || $status === 'chờ thanh toán'): 
+                            ?>
+                            <div>
+                                <button class="btn btn-outline-danger me-2" onclick="cancelOrder(<?php echo $paymentId; ?>)">
+                                    <i class="fas fa-times-circle me-1"></i>Từ chối / Hủy đơn
+                                </button>
+                                
+                                <button class="btn btn-success" 
+                                        onclick="confirmDelivery(<?php echo $paymentId; ?>)"
+                                        <?php echo (!$canFulfill) ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''; ?>
+                                        title="<?php echo (!$canFulfill) ? 'Không thể giao vì thiếu đồ' : ''; ?>">
+                                    <i class="fas fa-motorcycle me-1"></i>Giao cho Shipper
+                                </button>
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -171,27 +191,36 @@ if (!$paymentInfo) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function confirmDelivery(paymentId) {
-            if (confirm('Xác nhận đơn hàng này đã được giao thành công? Trạng thái sẽ cập nhật thành "Đã giao"')) {
-                fetch('process_update_status.php', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: `paymentId=${paymentId}&status=đã giao`
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('✅ Xác nhận thành công! Trở về danh sách...');
-                        window.location.href = '../?page=payment';
-                    } else {
-                        alert('❌ ' + data.message);
-                    }
-                })
-                .catch(err => {
-                    alert('❌ Lỗi kết nối, vui lòng thử lại');
-                });
+            if (confirm('Xác nhận CÓ ĐỦ MÓN và bắt đầu giao đơn hàng này cho khách?')) {
+                updateStatus(paymentId, 'đang giao');
             }
+        }
+
+        function cancelOrder(paymentId) {
+            if (confirm('Bạn có chắc chắn muốn HỦY đơn hàng này (VD: Do hết món, khách bom hàng)?')) {
+                updateStatus(paymentId, 'hủy');
+            }
+        }
+
+        function updateStatus(paymentId, newStatus) {
+            fetch('process_update_status.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `paymentId=${paymentId}&status=${encodeURIComponent(newStatus)}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Thao tác thành công!');
+                    location.reload();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(err => {
+                alert('❌ Lỗi kết nối máy chủ!');
+            });
         }
     </script>
 </body>
 </html>
-
