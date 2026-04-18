@@ -7,7 +7,7 @@
         $adminName = $_SESSION['CustomerName']; 
         $title = "Trang Quản Trị - Trung Nguyên Coffee";
         $page = $_GET['page'] ?? 'dashboard';
-        $allowed_pages = ['dashboard', 'category', 'product', 'store', 'employ', 'role', 'customer', 'payment', 'revenue', 'review', 'stats'];
+        $allowed_pages = ['dashboard', 'category', 'product', 'store', 'employee', 'role', 'customer', 'payment', 'revenue', 'review', 'stats'];
         if (!in_array($page, $allowed_pages)) {
             $page = 'dashboard';
         }

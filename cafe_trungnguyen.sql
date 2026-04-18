@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th4 15, 2026 lúc 05:55 AM
+-- Thời gian đã tạo: Th4 18, 2026 lúc 07:06 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -38,7 +38,8 @@ CREATE TABLE `cart` (
 --
 
 INSERT INTO `cart` (`Id`, `CustomerId`, `CreatedAt`) VALUES
-(1, 2, '2026-04-15 09:26:28');
+(1, 2, '2026-04-15 09:26:28'),
+(2, 1, '2026-04-15 20:03:04');
 
 -- --------------------------------------------------------
 
@@ -85,7 +86,8 @@ INSERT INTO `category` (`Id`, `Title`, `Content`, `CreateAt`, `UpdateAt`) VALUES
 (3, 'Nước ép', 'Ngọt lành và tươi mát từ trái cây...', '2025-11-17 14:52:54', '2025-11-17 14:52:54'),
 (4, 'Sinh tố', 'Những ly sinh tố mịn màng...', '2025-11-17 14:52:54', '2025-11-17 14:52:54'),
 (5, 'Đồ ăn nhẹ', 'Những món ăn nhẹ đầy hấp dẫn...', '2025-11-17 14:52:54', '2025-11-17 14:52:54'),
-(6, 'Các món khác', 'Từ nước lọc, sữa tươi...', '2025-11-17 14:52:54', '2025-11-17 14:52:54');
+(6, 'Các món khác', 'Từ nước lọc, sữa tươi...', '2025-11-17 14:52:54', '2025-11-17 14:52:54'),
+(10, 'sữa đậu nahf', '312312', '2026-04-17 11:50:03', '2026-04-17 11:50:03');
 
 -- --------------------------------------------------------
 
@@ -118,7 +120,7 @@ CREATE TABLE `customer` (
 --
 
 INSERT INTO `customer` (`Id`, `FirstName`, `LastName`, `Address`, `Phone`, `Email`, `Img`, `RegisteredAt`, `UpdateAt`, `DateOfBirth`, `Password`, `RandomKey`, `IsActive`, `Role`, `ProvinceId`, `DistrictId`, `WardCode`) VALUES
-(1, 'Nhật Thành', 'Nguyễn', '02 Nguyễn Đình Chiểu Phường Bắc Nha Trang Tỉnh Khánh Hòa', '0866492106', 'thanh.nn.64cntt@ntu.edu.vn', 'avatar-default.png', '2026-04-15 09:06:12', NULL, '2004-05-13', '$2y$10$65Kznmf7S7j7QH2/YrmaAuFHcXug48sS5xWHSqFKOp4xcy9.obWvi', '', 1, 0, 0, 0, ''),
+(1, 'Nhật Thành', 'Nguyễn', '05 Nguyễn Đình Chiểu Phường Bắc Nha Trang Tỉnh Khánh Hòa', '0866492106', 'thanh.nn.64cntt@ntu.edu.vn', 'avatar-default.png', '2026-04-15 09:06:12', '2026-04-17 10:05:21', '2004-05-13', '$2y$10$65Kznmf7S7j7QH2/YrmaAuFHcXug48sS5xWHSqFKOp4xcy9.obWvi', '', 1, 0, 0, 0, ''),
 (2, 'Văn A', 'Nguyễn', '123 Đường Láng, Đống Đa, Hà Nội', '0382395208', 'kinxedo78@gmail.com', 'avatar-default.png', '2026-04-15 09:21:26', NULL, '2003-11-11', '$2y$10$nkRRJXk5WoP5UheracXbEuj7S2DcHolqPFMdrBkfQeCJ/MEotjK0y', '', 1, 1, 0, 0, '');
 
 -- --------------------------------------------------------
@@ -164,7 +166,9 @@ INSERT INTO `employee` (`Id`, `FullName`, `StoreId`, `RoleId`, `Salary`) VALUES
 (22, 'Trần Thị Dung', 5, 2, 6500000.00),
 (23, 'Lê Văn Thành', 5, 3, 6000000.00),
 (24, 'Phạm Thị Thu', 5, 4, 12000000.00),
-(25, 'Hoàng Văn Long', 5, 5, 5500000.00);
+(25, 'Hoàng Văn Long', 5, 5, 5500000.00),
+(26, 'Nguyễn Nhật Thành', 1, 1, 5000000.00),
+(28, '<script> alert(123) </script>', 1, 1, 213321321.00);
 
 -- --------------------------------------------------------
 
@@ -227,9 +231,16 @@ CREATE TABLE `payment` (
 --
 
 INSERT INTO `payment` (`Id`, `CustomerId`, `StoreId`, `Total`, `PaymentMethod`, `Carrier`, `TrackingCode`, `Status`, `CreatedAt`) VALUES
-(1, 2, 3, 25000.00, 'cod', NULL, NULL, 'pending', '2026-04-15 09:26:41'),
-(2, 2, 3, 20000.00, 'bank', NULL, NULL, 'paid', '2026-04-15 09:27:28'),
-(3, 2, 1, 7500.00, 'cod', NULL, NULL, 'pending', '2026-04-15 10:37:50');
+(1, 2, 3, 25000.00, 'cod', NULL, NULL, 'đang giao', '2026-04-15 09:26:41'),
+(2, 2, 3, 20000.00, 'bank', NULL, NULL, 'đã giao', '2026-04-15 09:27:28'),
+(4, 1, 2, 25000.00, 'bank', NULL, NULL, 'đã giao', '2026-04-15 20:03:08'),
+(5, 1, 2, 25000.00, 'cod', NULL, NULL, 'hủy', '2026-04-15 20:05:05'),
+(7, 1, 3, 40000.00, 'bank', NULL, NULL, 'đang xử lý', '2026-04-16 09:31:40'),
+(8, 1, 2, 40000.00, 'bank', NULL, NULL, 'đang xử lý', '2026-04-16 11:20:44'),
+(9, 1, 2, 40501.00, 'cod', NULL, NULL, 'đang giao', '2026-04-17 10:09:08'),
+(10, 1, 3, 35501.00, 'bank', NULL, NULL, 'đã giao', '2026-04-17 10:14:53'),
+(11, 2, 5, 40501.00, 'cod', NULL, NULL, 'đang xử lý', '2026-04-18 11:32:52'),
+(12, 1, 4, 40501.00, 'cod', NULL, NULL, 'đang giao', '2026-04-18 11:39:06');
 
 -- --------------------------------------------------------
 
@@ -252,7 +263,14 @@ CREATE TABLE `paymentdetail` (
 INSERT INTO `paymentdetail` (`Id`, `PaymentId`, `StoreProductId`, `Price`, `Quantity`) VALUES
 (1, 1, 89, 25000.00, 1),
 (2, 2, 86, 20000.00, 1),
-(3, 3, 28, 7500.00, 1);
+(4, 4, 66, 25000.00, 1),
+(5, 5, 66, 25000.00, 1),
+(7, 7, 88, 25000.00, 1),
+(8, 8, 65, 25000.00, 1),
+(9, 9, 66, 25000.00, 1),
+(10, 10, 86, 20000.00, 1),
+(11, 11, 133, 25000.00, 1),
+(12, 12, 111, 25000.00, 1);
 
 -- --------------------------------------------------------
 
@@ -299,7 +317,9 @@ INSERT INTO `product` (`Id`, `Title`, `Content`, `Img`, `Price`, `Weight`, `Rate
 (19, 'Cà phê đá', 'Cà phê đá nguyên chất, thơm ngon, phù hợp cho những ai yêu thích vị cà phê đậm đà.', 'pngtree-iced-coffee-png-image_9237463.png', 20000.00, 500, 5.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1),
 (20, 'Cà phê sữa', 'Cà phê sữa ngọt dịu, kết hợp giữa vị cà phê và sữa đặc truyền thống.', 'images.jpg', 25000.00, 500, 5.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1),
 (21, 'Cà phê dừa', 'Cà phê kết hợp với nước cốt dừa béo ngậy, độc đáo và thơm ngon.', 'images-_2_.jpg', 25000.00, 500, 4.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1),
-(22, 'Cà phê trứng', 'Sở hữu kiểu dáng mạnh mẽ, gam màu sang trọng, âm thanh sống động, hiệu ứng đèn LED RGB đẹp mắt, kết nối không dây nhanh chóng mang đến cho bạn những trải nghiệm tuyệt vời.', 'images-_1_.jpg', 25000.00, 500, 4.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1);
+(22, 'Cà phê trứng', 'Sở hữu kiểu dáng mạnh mẽ, gam màu sang trọng, âm thanh sống động, hiệu ứng đèn LED RGB đẹp mắt, kết nối không dây nhanh chóng mang đến cho bạn những trải nghiệm tuyệt vời.', 'images-_1_.jpg', 25000.00, 500, 4.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1),
+(24, 'trà sữa', 'ádfasdfas', '69df8ed7a7835.png', 25000.00, 500, 0.00, '2026-04-15 20:12:55', NULL, 1),
+(26, 'cà phê đen', '123321', '69e1bb9fb6bd7.png', 1222221.00, 500, 0.00, '2026-04-17 11:48:31', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -337,6 +357,16 @@ CREATE TABLE `revenue` (
   `Total` decimal(18,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `revenue`
+--
+
+INSERT INTO `revenue` (`Id`, `StoreId`, `Month`, `Year`, `Total`) VALUES
+(1, 5, 4, 2026, 40501.00),
+(2, 4, 4, 2026, 40501.00),
+(3, 2, 4, 2026, 25000.00),
+(4, 3, 4, 2026, 55501.00);
+
 -- --------------------------------------------------------
 
 --
@@ -361,7 +391,14 @@ CREATE TABLE `shipment` (
 INSERT INTO `shipment` (`Id`, `PaymentId`, `Carrier`, `TrackingCode`, `Status`, `Latitude`, `Longitude`, `UpdatedAt`) VALUES
 (1, 1, 'DEMO', 'DEMO1776220001', 'ready_to_pick', NULL, NULL, '2026-04-15 09:26:41'),
 (2, 2, 'DEMO', 'DEMO1776220048', 'ready_to_pick', NULL, NULL, '2026-04-15 09:27:28'),
-(3, 3, 'DEMO', 'DEMO1776224270', 'ready_to_pick', NULL, NULL, '2026-04-15 10:37:50');
+(4, 4, 'DEMO', 'DEMO1776258188', 'ready_to_pick', NULL, NULL, '2026-04-15 20:03:08'),
+(5, 5, 'DEMO', 'DEMO1776258305', 'ready_to_pick', NULL, NULL, '2026-04-15 20:05:05'),
+(7, 7, 'DEMO', 'DEMO1776306700', 'ready_to_pick', NULL, NULL, '2026-04-16 09:31:40'),
+(8, 8, 'DEMO', 'DEMO1776313244', 'ready_to_pick', NULL, NULL, '2026-04-16 11:20:44'),
+(9, 9, 'DEMO', 'DEMO1776395348', 'ready_to_pick', NULL, NULL, '2026-04-17 10:09:08'),
+(10, 10, 'DEMO', 'DEMO1776395693', 'ready_to_pick', NULL, NULL, '2026-04-17 10:14:53'),
+(11, 11, 'DEMO', 'DEMO1776486772', 'ready_to_pick', NULL, NULL, '2026-04-18 11:32:52'),
+(12, 12, 'DEMO', 'DEMO1776487146', 'ready_to_pick', NULL, NULL, '2026-04-18 11:39:06');
 
 -- --------------------------------------------------------
 
@@ -519,7 +556,11 @@ INSERT INTO `storeproduct` (`Id`, `StoreId`, `ProductId`, `IsAvailable`, `Discou
 (130, 5, 19, 1, 0),
 (131, 5, 20, 1, 0),
 (132, 5, 21, 0, 0),
-(133, 5, 22, 1, 0);
+(133, 5, 22, 1, 0),
+(136, 5, 24, 1, 0),
+(139, 5, 26, 1, 0),
+(140, 4, 26, 1, 0),
+(141, 2, 26, 1, 0);
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -613,6 +654,8 @@ ALTER TABLE `productreview`
 --
 ALTER TABLE `revenue`
   ADD PRIMARY KEY (`Id`),
+  ADD UNIQUE KEY `unq_store_time` (`StoreId`,`Month`,`Year`),
+  ADD UNIQUE KEY `unq_store_month_year` (`StoreId`,`Month`,`Year`),
   ADD KEY `StoreId` (`StoreId`);
 
 --
@@ -646,19 +689,19 @@ ALTER TABLE `storeproduct`
 -- AUTO_INCREMENT cho bảng `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT cho bảng `cart_item`
 --
 ALTER TABLE `cart_item`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT cho bảng `category`
 --
 ALTER TABLE `category`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT cho bảng `customer`
@@ -670,13 +713,13 @@ ALTER TABLE `customer`
 -- AUTO_INCREMENT cho bảng `employee`
 --
 ALTER TABLE `employee`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT cho bảng `employeerole`
 --
 ALTER TABLE `employeerole`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT cho bảng `page`
@@ -688,19 +731,19 @@ ALTER TABLE `page`
 -- AUTO_INCREMENT cho bảng `payment`
 --
 ALTER TABLE `payment`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT cho bảng `paymentdetail`
 --
 ALTER TABLE `paymentdetail`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT cho bảng `product`
 --
 ALTER TABLE `product`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT cho bảng `productreview`
@@ -712,25 +755,25 @@ ALTER TABLE `productreview`
 -- AUTO_INCREMENT cho bảng `revenue`
 --
 ALTER TABLE `revenue`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT cho bảng `shipment`
 --
 ALTER TABLE `shipment`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT cho bảng `store`
 --
 ALTER TABLE `store`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT cho bảng `storeproduct`
 --
 ALTER TABLE `storeproduct`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=136;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=142;
 
 --
 -- Các ràng buộc cho các bảng đã đổ

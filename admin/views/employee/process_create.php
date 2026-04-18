@@ -4,29 +4,27 @@ require_once __DIR__ . '/../../controllers/EmployeeAdminController.php';
 require_once __DIR__ . '/../../models/EmployeeAdmin.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name'] ?? '');
-    $store_id = intval($_POST['store_id'] ?? 0);
-    $role_id = intval($_POST['role_id'] ?? 0);
-    $salary = floatval($_POST['salary'] ?? 0);
+    $emp = new EmployeeAdmin();
+    $emp->FullName = trim($_POST['name'] ?? '');
+    $emp->StoreId = intval($_POST['store_id'] ?? 0);
+    $emp->RoleId = intval($_POST['role_id'] ?? 0);
+    $emp->Salary = floatval($_POST['salary'] ?? 0);
 
-    // Validate dữ liệu cơ bản
-    if (!empty($name) && $store_id > 0) {
-        $emp = new EmployeeAdmin();
-        $emp->FullName = $name;
-        $emp->StoreId = $store_id;
-        $emp->RoleId = $role_id;
-        $emp->Salary = $salary;
-
+    if (empty($emp->FullName) || $emp->StoreId <= 0 || $emp->RoleId <= 0) {
+        $_SESSION['error_message'] = "Vui lòng nhập đầy đủ Họ tên, Chi nhánh và Chức vụ hợp lệ!";
+    } else {
         $controller = new EmployeeAdminController();
-        $controller->addEmployee($emp);
+        $result = $controller->addEmployee($emp);
+        
+        if ($result === true) {
+            $_SESSION['success_message'] = "🎉 Đã thêm nhân viên thành công!";
+        } else {
+            // Trả về lỗi CSDL nếu thất bại
+            $_SESSION['error_message'] = $result; 
+        }
     }
-    
-    // Luôn redirect
-    header("Location: ../index.php?page=employee");
-    exit();
 }
 
-// Nếu truy cập bằng GET, đẩy về
-header("Location: ../index.php?page=employee");
+ header('Location: ../index.php?page=employee');
 exit();
 ?>

@@ -110,24 +110,26 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Lấy dữ liệu từ PHP
-        let payments = <?= json_encode($payments) ?> || [];
-        let currentPaymentId = 0;
+        // 1. SỬ DỤNG 'var' THAY VÌ 'let' ĐỂ CHỐNG LỖI CRASH KHI CHUYỂN TAB
+        var payments = <?= json_encode($payments) ?> || [];
+        var currentPaymentId = 0;
 
-        // 1. TỰ ĐỘNG ĐỔ DỮ LIỆU CỬA HÀNG VÀO BỘ LỌC
         function populateStoreFilter() {
             const storeSelect = document.getElementById('storeFilter');
-            const storeMap = {};
+            if (!storeSelect) return;
             
-            // Lấy danh sách ID và Tên cửa hàng duy nhất
+            // Dọn dẹp dữ liệu cũ trước khi nạp để tránh bị nhân đôi khi chuyển tab
+            storeSelect.innerHTML = '<option value="">Tất cả cửa hàng</option>';
+            
+            const storeMap = {};
             payments.forEach(p => {
                 if (p.StoreId) {
                     storeMap[p.StoreId] = p.StoreName || `Cửa hàng #${p.StoreId}`;
                 }
             });
 
-            // Tạo các thẻ option
             for (const [storeId, storeName] of Object.entries(storeMap)) {
                 const option = document.createElement('option');
                 option.value = storeId;
@@ -136,9 +138,10 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
             }
         }
 
-        // 2. RENDER BẢNG
         function renderPayments(filteredPayments) {
             const tbody = document.getElementById('paymentTableBody');
+            if (!tbody) return;
+            
             tbody.innerHTML = '';
 
             if (filteredPayments.length === 0) {
@@ -175,7 +178,6 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
             });
         }
 
-        // 3. XỬ LÝ TRẠNG THÁI (BADGE)
         function getStatusBadge(status) {
             const safeStatus = (status || '').toLowerCase();
             const statusMap = {
@@ -204,7 +206,6 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
             return badges[vietStatus] || `<span class="badge bg-secondary">${vietStatus || 'N/A'}</span>`;
         }
 
-        // 4. TIỆN ÍCH FORMAT
         function formatCurrency(amount) {
             const num = parseFloat(amount) || 0;
             return new Intl.NumberFormat('vi-VN').format(num) + ' ₫';
@@ -215,12 +216,17 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
             return new Date(dateStr).toLocaleString('vi-VN');
         }
 
-        // 5. CHỨC NĂNG LỌC VÀ TÌM KIẾM
         function loadPayments() {
             let filtered = payments;
-            const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
-            const search = document.getElementById('searchInput').value.toLowerCase().trim();
-            const store = document.getElementById('storeFilter').value;
+            const statusFilterElement = document.getElementById('statusFilter');
+            const searchInputElement = document.getElementById('searchInput');
+            const storeFilterElement = document.getElementById('storeFilter');
+            
+            if (!statusFilterElement || !searchInputElement || !storeFilterElement) return;
+
+            const statusFilter = statusFilterElement.value.toLowerCase();
+            const search = searchInputElement.value.toLowerCase().trim();
+            const store = storeFilterElement.value;
 
             const statusMap = {
                 'pending': 'đang xử lý',
@@ -232,7 +238,6 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
                 'đã hủy': 'hủy'
             };
 
-            // Lọc theo trạng thái
             if (statusFilter) {
                 filtered = filtered.filter(p => {
                     const rawStatus = (p.Status || '').toLowerCase();
@@ -241,7 +246,6 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
                 });
             }
 
-            // Lọc theo từ khóa (Mã đơn hoặc Tên/Mã khách)
             if (search) {
                 filtered = filtered.filter(p => {
                     const idMatch = `#${p.Id}`.toLowerCase().includes(search);
@@ -250,7 +254,6 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
                 });
             }
 
-            // Lọc theo cửa hàng
             if (store) {
                 filtered = filtered.filter(p => p.StoreId == store);
             }
@@ -258,7 +261,6 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
             renderPayments(filtered);
         }
 
-        // 6. XỬ LÝ MODAL & CẬP NHẬT
         function showStatusModal(paymentId) {
             currentPaymentId = paymentId;
             const modal = new bootstrap.Modal(document.getElementById('statusModal'));
@@ -268,7 +270,7 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
         function updateStatus() {
             const status = document.getElementById('newStatus').value;
             
-            fetch('process_update_status.php', {
+            fetch('payment/process_update_status.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: `paymentId=${currentPaymentId}&status=${encodeURIComponent(status)}`
@@ -277,14 +279,14 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
             .then(data => {
                 if (data.success) {
                     alert('✅ Cập nhật thành công!');
-                    location.reload(); // Hoặc cập nhật array payments tại local thay vì reload
+                    location.reload(); 
                 } else {
                     alert('❌ Lỗi: ' + (data.message || 'Không thể cập nhật'));
                 }
             })
             .catch(error => {
                 console.error("Lỗi cập nhật:", error);
-                alert("❌ Đã có lỗi xảy ra trong quá trình cập nhật!");
+                alert("❌ Lỗi kết nối! Kiểm tra lại đường dẫn.");
             });
             
             bootstrap.Modal.getInstance(document.getElementById('statusModal')).hide();
@@ -294,21 +296,17 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
             window.location.href = `payment/detail.php?id=${paymentId}`;
         }
 
-
-
-
-        /// 7. KHỞI TẠO KHI LOAD TRANG (ĐÃ SỬA LỖI F5)
+        // 2. KHỞI TẠO TRỰC TIẾP KHÔNG CẦN CHỜ SỰ KIỆN DOMContentLoaded
         function initAdminPayment() {
-            populateStoreFilter();
-            loadPayments();
+            // Kiểm tra xem thẻ body của bảng có tồn tại không trước khi chạy
+            if(document.getElementById('paymentTableBody')) {
+                populateStoreFilter();
+                loadPayments();
+            }
         }
 
-        // Kiểm tra xem trình duyệt đã load xong chưa, nếu xong rồi thì chạy luôn!
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initAdminPayment);
-        } else {
-            initAdminPayment(); 
-        }
+        // Dùng setTimeout 50ms để đảm bảo HTML đã được tabbar vẽ ra kịp
+        setTimeout(initAdminPayment, 50);
     </script>
 </body>
 </html>

@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Xử lý xong quay lại trang danh sách
-    header("Location: index.php");
+   header('Location: ../index.php?page=role');
     exit();
 }
 ?>

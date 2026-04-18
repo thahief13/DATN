@@ -1,9 +1,9 @@
 <?php
-class RevenueAdmin
-{
-    public $Id;
+class RevenueAdmin {
     public $StoreId;
-    public $Month;
-    public $Year;
-    public $Total;
+    public $StoreName;
+    public $RevenueDate; // Cột mới thêm
+    public $TotalRevenue;
+    public $OrderCount;
 }
+?>
