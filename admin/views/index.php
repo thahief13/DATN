@@ -7,7 +7,7 @@
         $adminName = $_SESSION['CustomerName']; 
         $title = "Trang Quản Trị - Trung Nguyên Coffee";
         $page = $_GET['page'] ?? 'dashboard';
-        $allowed_pages = ['dashboard', 'category', 'product', 'store', 'employee', 'role', 'customer', 'payment', 'revenue', 'review', 'stats'];
+        $allowed_pages = ['dashboard', 'category', 'product', 'store', 'employee', 'role', 'customer', 'payment', 'revenue',];
         if (!in_array($page, $allowed_pages)) {
             $page = 'dashboard';
         }
@@ -220,8 +220,8 @@
         <a href="?page=customer"><i class="fas fa-user-tie"></i><span> Quản lý khách hàng</span></a>
         <a href="?page=payment"><i class="fas fa-file-invoice"></i><span> Quản lý đơn hàng</span></a>
         <a href="?page=revenue"><i class="fas fa-chart-line"></i><span> Quản lý doanh thu</span></a>
-        <a href="?page=review"><i class="fas fa-star"></i><span> Quản lý đánh giá</span></a>
-        <a href="?page=stats"><i class="fas fa-chart-bar"></i><span> Thống kê</span></a>
+        
+        
     </nav>
 
     <div class="container-wrapper">
