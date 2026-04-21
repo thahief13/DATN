@@ -454,9 +454,7 @@ function deleteOrder(paymentId) {
             </div>
         <?php else: ?>
             <div class="text-center mt-4 d-flex flex-column flex-md-row justify-content-center gap-2">
-                <a href="detail.php?id=<?= $payment['Id'] ?>&edit=1" class="btn btn-warning" style="padding: 12px 30px; font-size: 16px;">
-                    <i class="fas fa-edit me-1"></i> Sửa thông tin
-                </a>
+                
                 <a href="../payment/index.php" class="btn btn-secondary" style="padding: 12px 30px; font-size: 16px;">
                     <i class="fas fa-arrow-left me-1"></i> Quay lại danh sách
                 </a>
