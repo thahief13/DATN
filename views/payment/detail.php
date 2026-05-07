@@ -498,7 +498,7 @@ function deleteOrder(paymentId) {
         </div>
         <div class="text-center">
             <button class="btn btn-danger" onclick="deleteOrder(<?= $payment['Id'] ?>)" style="padding: 12px 30px; font-size: 16px;">
-                <i class="fas fa-trash me-1"></i> Xóa đơn hàng
+                <i class="fas fa-trash me-1"></i> Hủy đơn hàng
             </button>
         </div>
     </div>

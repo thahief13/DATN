@@ -7,7 +7,7 @@
         $adminName = $_SESSION['CustomerName']; 
         $title = "Trang Quản Trị - Trung Nguyên Coffee";
         $page = $_GET['page'] ?? 'dashboard';
-        $allowed_pages = ['dashboard', 'category', 'product', 'store', 'employee', 'role', 'customer', 'payment', 'revenue',];
+        $allowed_pages = ['dashboard', 'category', 'product', 'store', 'employee', 'role', 'customer', 'payment', 'revenue','review'];
         if (!in_array($page, $allowed_pages)) {
             $page = 'dashboard';
         }
@@ -220,7 +220,7 @@
         <a href="?page=customer"><i class="fas fa-user-tie"></i><span> Quản lý khách hàng</span></a>
         <a href="?page=payment"><i class="fas fa-file-invoice"></i><span> Quản lý đơn hàng</span></a>
         <a href="?page=revenue"><i class="fas fa-chart-line"></i><span> Quản lý doanh thu</span></a>
-        
+        <a href="?page=review"><i class="fas fa-star"></i><span> Quản lý đánh giá</span></a>
         
     </nav>
 
@@ -228,19 +228,15 @@
         <main role="main" class="pb-3" id="main-content">
 <?php 
 // Check session messages
-if (isset($_SESSION['success_message'])) {
-    echo '<div class="alert alert-success alert-dismissible fade show" role="alert">';
-    echo $_SESSION['success_message'];
+$message = $_SESSION['message'] ?? '';
+$messageType = $_SESSION['message_type'] ?? '';
+unset($_SESSION['message'], $_SESSION['message_type']);
+if ($message) {
+    $alertClass = $messageType === 'success' ? 'alert-success' : 'alert-danger';
+    echo '<div class="alert ' . $alertClass . ' alert-dismissible fade show" role="alert">';
+    echo htmlspecialchars($message);
     echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
     echo '</div>';
-    unset($_SESSION['success_message']);
-}
-if (isset($_SESSION['error_message'])) {
-    echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
-    echo $_SESSION['error_message'];
-    echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
-    echo '</div>';
-    unset($_SESSION['error_message']);
 }
 include $page . '/index.php'; 
 ?>

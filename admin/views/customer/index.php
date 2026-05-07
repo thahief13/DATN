@@ -6,6 +6,11 @@ $customerAdminController = new CustomerAdminController();
 $search = $_GET['search'] ?? '';
 $customerAdmins = $customerAdminController->getAllCustomers($search);
 $customersJson = json_encode($customerAdmins, JSON_UNESCAPED_UNICODE);
+
+// Hiển thị thông báo
+$message = $_SESSION['message'] ?? '';
+$messageType = $_SESSION['message_type'] ?? '';
+unset($_SESSION['message'], $_SESSION['message_type']);
 ?>
 
 <!DOCTYPE html>
@@ -18,13 +23,22 @@ $customersJson = json_encode($customerAdmins, JSON_UNESCAPED_UNICODE);
 </head>
 <body class="bg-light">
 <div class="container my-5">
+    <?php if ($message): ?>
+        <div class="alert alert-<?= $messageType === 'success' ? 'success' : 'danger' ?> alert-dismissible fade show" role="alert">
+            <?= htmlspecialchars($message) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3><i class="fas fa-users text-primary"></i> Danh sách khách hàng</h3>
-        <form method="GET" class="d-flex w-50">
-            <input type="hidden" name="page" value="customer">
-            <input type="text" name="search" class="form-control me-2" placeholder="Tìm tên, email hoặc SĐT..." value="<?= htmlspecialchars($search) ?>">
-            <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
-        </form>
+        <div class="d-flex">
+            <form method="GET" class="d-flex me-2">
+                <input type="hidden" name="page" value="customer">
+                <input type="text" name="search" class="form-control me-2" placeholder="Tìm tên, email hoặc SĐT..." value="<?= htmlspecialchars($search) ?>">
+                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+            </form>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal"><i class="fa fa-plus"></i> Thêm khách hàng</button>
+        </div>
     </div>
 
     <div class="table-responsive bg-white p-3 rounded shadow-sm">
@@ -74,11 +88,15 @@ $customersJson = json_encode($customerAdmins, JSON_UNESCAPED_UNICODE);
 
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <form action="process_edit_customer.php" method="POST" class="modal-content">
-            <div class="modal-header bg-primary text-white"><h5 class="modal-title">Cập nhật trạng thái</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <form action="customer/process_edit_customer.php" method="POST" class="modal-content">
+            <div class="modal-header bg-primary text-white"><h5 class="modal-title">Cập nhật thông tin khách hàng</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <input type="hidden" name="CustomerId" id="edit-id">
-                <div class="mb-3"><label class="form-label">Khách hàng:</label><input type="text" id="edit-name" class="form-control" readonly></div>
+                <div class="mb-3"><label class="form-label">Họ:</label><input type="text" name="LastName" id="edit-lastname" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label">Tên:</label><input type="text" name="FirstName" id="edit-firstname" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label">Email:</label><input type="email" name="Email" id="edit-email" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label">SĐT:</label><input type="text" name="Phone" id="edit-phone" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label">Địa chỉ:</label><textarea name="Address" id="edit-address" class="form-control" rows="3"></textarea></div>
                 <div class="mb-3"><label class="form-label">Trạng thái:</label>
                     <select name="IsActive" id="edit-status" class="form-select">
                         <option value="1">Kích hoạt (Hoạt động)</option>
@@ -97,6 +115,23 @@ $customersJson = json_encode($customerAdmins, JSON_UNESCAPED_UNICODE);
             <div class="modal-header bg-danger text-white"><h5 class="modal-title">Xác nhận xóa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">Bạn có chắc chắn muốn xóa khách hàng này? <input type="hidden" name="CustomerId" id="delete-id"></div>
             <div class="modal-footer"><button type="submit" class="btn btn-danger">Xóa ngay</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="customer/process_add_customer.php" method="POST" class="modal-content">
+            <div class="modal-header bg-success text-white"><h5 class="modal-title">Thêm khách hàng mới</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">Họ:</label><input type="text" name="LastName" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label">Tên:</label><input type="text" name="FirstName" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label">Email:</label><input type="email" name="Email" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label">SĐT:</label><input type="text" name="Phone" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label">Địa chỉ:</label><textarea name="Address" class="form-control" rows="3"></textarea></div>
+                <div class="mb-3"><label class="form-label">Mật khẩu:</label><input type="password" name="Password" class="form-control" required></div>
+            </div>
+            <div class="modal-footer"><button type="submit" class="btn btn-success">Thêm</button></div>
         </form>
     </div>
 </div>
@@ -120,7 +155,11 @@ $customersJson = json_encode($customerAdmins, JSON_UNESCAPED_UNICODE);
                 `;
             } else if(m.id === 'editModal') {
                 document.getElementById('edit-id').value = c.Id;
-                document.getElementById('edit-name').value = c.LastName + ' ' + c.FirstName;
+                document.getElementById('edit-lastname').value = c.LastName;
+                document.getElementById('edit-firstname').value = c.FirstName;
+                document.getElementById('edit-email').value = c.Email;
+                document.getElementById('edit-phone').value = c.Phone;
+                document.getElementById('edit-address').value = c.Address;
                 document.getElementById('edit-status').value = c.IsActive;
             } else if(m.id === 'deleteModal') {
                 document.getElementById('delete-id').value = c.Id;

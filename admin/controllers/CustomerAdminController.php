@@ -76,5 +76,59 @@ class CustomerAdminController {
         $db->close();
         return $success;
     }
+
+    // Thêm khách hàng mới
+    public function createCustomer($firstName, $lastName, $email, $phone, $address, $password) {
+        global $hostname, $username, $password, $dbname, $port;
+        $db = new mysqli($hostname, $username, $password, $dbname, $port);
+        $db->set_charset("utf8mb4");
+
+        // Kiểm tra email đã tồn tại
+        $checkSql = "SELECT Id FROM customer WHERE Email = ?";
+        $checkStmt = $db->prepare($checkSql);
+        $checkStmt->bind_param("s", $email);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
+        if ($checkResult->num_rows > 0) {
+            $db->close();
+            return false; // Email đã tồn tại
+        }
+
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $randomKey = bin2hex(random_bytes(16));
+        $registeredAt = date('Y-m-d H:i:s');
+
+        $sql = "INSERT INTO customer (FirstName, LastName, Email, Phone, Address, Password, RandomKey, RegisteredAt, IsActive, Role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0)";
+        $stmt = $db->prepare($sql);
+        $stmt->bind_param("ssssssss", $firstName, $lastName, $email, $phone, $address, $hashedPassword, $randomKey, $registeredAt);
+        $success = $stmt->execute();
+        $db->close();
+        return $success;
+    }
+
+    // Cập nhật thông tin khách hàng
+    public function updateCustomerInfo($id, $firstName, $lastName, $email, $phone, $address) {
+        global $hostname, $username, $password, $dbname, $port;
+        $db = new mysqli($hostname, $username, $password, $dbname, $port);
+        $db->set_charset("utf8mb4");
+
+        // Kiểm tra email đã tồn tại với id khác
+        $checkSql = "SELECT Id FROM customer WHERE Email = ? AND Id != ?";
+        $checkStmt = $db->prepare($checkSql);
+        $checkStmt->bind_param("si", $email, $id);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
+        if ($checkResult->num_rows > 0) {
+            $db->close();
+            return false; // Email đã tồn tại
+        }
+
+        $sql = "UPDATE customer SET FirstName = ?, LastName = ?, Email = ?, Phone = ?, Address = ? WHERE Id = ? AND Role = 0";
+        $stmt = $db->prepare($sql);
+        $stmt->bind_param("sssssi", $firstName, $lastName, $email, $phone, $address, $id);
+        $success = $stmt->execute();
+        $db->close();
+        return $success;
+    }
     
 }
