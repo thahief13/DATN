@@ -9,7 +9,7 @@ if (!isset($_SESSION['CustomerId'])) {
 }
 
 $currentCustomerId = $_SESSION['CustomerId'];
-
+global $hostname, $username, $password, $dbname;
 $conn = new mysqli($hostname, $username, $password, $dbname);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
@@ -146,9 +146,6 @@ $payments = $paymentController->getCustomerPayments($currentCustomerId);
                             ?>
 
                            <?php if ($canCancel): ?>
-                                <a href="detail.php?id=<?= $payment['Id'] ?>&edit=1" class="btn btn-outline-warning" title="Sửa thông tin (Còn <?= 15 - $diffMinutes ?> phút)" data-bs-toggle="tooltip">
-                                    <i class="fas fa-edit"></i>
-                                </a>
                                 <button class="btn btn-outline-danger delete-btn" data-id="<?= $payment['Id'] ?>" title="Hủy đơn hàng" data-bs-toggle="tooltip">
                                     <i class="fas fa-trash"></i>
                                 </button>

@@ -444,14 +444,7 @@ function deleteOrder(paymentId) {
 
 
         <?php if ($isEdit): ?>
-            <div class="text-center mt-4 edit-section">
-                <button onclick="saveCustomerInfo(<?= $payment['Id'] ?>, event)" class="btn btn-success me-2" style="padding: 12px 30px; font-size: 16px;">
-                    <i class="fas fa-save me-1"></i> Lưu thông tin
-                </button>
-                <a href="detail.php?id=<?= $payment['Id'] ?>" class="btn btn-secondary" style="padding: 12px 30px; font-size: 16px;">
-                    <i class="fas fa-times me-1"></i> Hủy
-                </a>
-            </div>
+            
         <?php else: ?>
             <div class="text-center mt-4 d-flex flex-column flex-md-row justify-content-center gap-2">
                 
