@@ -111,7 +111,7 @@ unset($_SESSION['message'], $_SESSION['message_type']);
 
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <form action="process_delete_customer.php" method="POST" class="modal-content">
+        <form action="customer/process_delete_customer.php" method="POST" class="modal-content">
             <div class="modal-header bg-danger text-white"><h5 class="modal-title">Xác nhận xóa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">Bạn có chắc chắn muốn xóa khách hàng này? <input type="hidden" name="CustomerId" id="delete-id"></div>
             <div class="modal-footer"><button type="submit" class="btn btn-danger">Xóa ngay</button></div>
@@ -130,6 +130,10 @@ unset($_SESSION['message'], $_SESSION['message_type']);
                 <div class="mb-3"><label class="form-label">SĐT:</label><input type="text" name="Phone" class="form-control" required></div>
                 <div class="mb-3"><label class="form-label">Địa chỉ:</label><textarea name="Address" class="form-control" rows="3"></textarea></div>
                 <div class="mb-3"><label class="form-label">Mật khẩu:</label><input type="password" name="Password" class="form-control" required></div>
+                <div class="mb-3">
+                    <label class="form-label">Nhập lại mật khẩu:</label>
+                    <input type="password" name="ConfirmPassword" class="form-control" required>
+                </div>
             </div>
             <div class="modal-footer"><button type="submit" class="btn btn-success">Thêm</button></div>
         </form>
@@ -138,34 +142,59 @@ unset($_SESSION['message'], $_SESSION['message_type']);
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const customers = <?= $customersJson ?>;
-    document.querySelectorAll('.modal').forEach(m => {
-        m.addEventListener('show.bs.modal', e => {
-            const id = e.relatedTarget.getAttribute('data-bs-id');
-            const c = customers.find(item => item.Id == id);
-            if(!c) return;
+    // ĐÃ SỬA: Đổi const thành var để tránh lỗi khi AJAX load lại trang
+    var customersData = <?= $customersJson ?>;
 
-            if(m.id === 'viewModal') {
-                document.getElementById('view-content').innerHTML = `
-                    <p><strong>Họ tên:</strong> ${c.LastName} ${c.FirstName}</p>
-                    <p><strong>Email:</strong> ${c.Email}</p>
-                    <p><strong>SĐT:</strong> ${c.Phone}</p>
-                    <p><strong>Địa chỉ:</strong> ${c.Address}</p>
-                    <p><strong>Ngày ĐK:</strong> ${c.RegisteredAt}</p>
-                `;
-            } else if(m.id === 'editModal') {
-                document.getElementById('edit-id').value = c.Id;
-                document.getElementById('edit-lastname').value = c.LastName;
-                document.getElementById('edit-firstname').value = c.FirstName;
-                document.getElementById('edit-email').value = c.Email;
-                document.getElementById('edit-phone').value = c.Phone;
-                document.getElementById('edit-address').value = c.Address;
-                document.getElementById('edit-status').value = c.IsActive;
-            } else if(m.id === 'deleteModal') {
-                document.getElementById('delete-id').value = c.Id;
-            }
-        });
-    });
+    // ĐÃ SỬA: Xóa sự kiện cũ (nếu có) trước khi tạo mới để tránh chạy đè
+    if (window.customerModalHandler) {
+        document.removeEventListener('show.bs.modal', window.customerModalHandler);
+    }
+
+    // ĐÃ SỬA: Gộp chung vào 1 hàm dùng chung (Event Delegation)
+    window.customerModalHandler = function(e) {
+        var m = e.target;
+        var btn = e.relatedTarget;
+        
+        // Chỉ xử lý nếu có nút bấm gọi modal
+        if (!btn || !btn.hasAttribute('data-bs-id')) return;
+        
+        var id = btn.getAttribute('data-bs-id');
+        var c = customersData.find(item => item.Id == id);
+        
+        if (!c) return;
+
+        if (m.id === 'viewModal') {
+            document.getElementById('view-content').innerHTML = `
+                <p><strong>Họ tên:</strong> ${c.LastName} ${c.FirstName}</p>
+                <p><strong>Email:</strong> ${c.Email}</p>
+                <p><strong>SĐT:</strong> ${c.Phone}</p>
+                <p><strong>Địa chỉ:</strong> ${c.Address}</p>
+                <p><strong>Ngày ĐK:</strong> ${c.RegisteredAt}</p>
+            `;
+        } else if (m.id === 'editModal') {
+            document.getElementById('edit-id').value = c.Id;
+            document.getElementById('edit-lastname').value = c.LastName;
+            document.getElementById('edit-firstname').value = c.FirstName;
+            document.getElementById('edit-email').value = c.Email;
+            document.getElementById('edit-phone').value = c.Phone;
+            document.getElementById('edit-address').value = c.Address;
+            document.getElementById('edit-status').value = c.IsActive;
+        } else if (m.id === 'deleteModal') {
+            document.getElementById('delete-id').value = c.Id;
+        }
+    };
+window.validateAddCustomer = function(form) {
+        var password = form.querySelector('input[name="Password"]').value;
+        var confirmPassword = form.querySelector('input[name="ConfirmPassword"]').value;
+        
+        if (password !== confirmPassword) {
+            alert(' Mật khẩu nhập lại không khớp! Vui lòng kiểm tra lại.');
+            return false; // Báo lỗi và chặn không cho form submit lên server
+        }
+        return true; // Cho phép submit nếu khớp
+    };
+    
+    document.addEventListener('show.bs.modal', window.customerModalHandler);
 </script>
 </body>
 </html>

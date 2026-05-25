@@ -205,59 +205,65 @@ $storesJson = json_encode($stores, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let storesData = [];
-            try {
-                storesData = JSON.parse(document.getElementById('stores-data').textContent);
-            } catch(e) {
-                console.error("Lỗi JSON: ", e);
+  <script>
+        window.currentStoresData = [];
+        try {
+            var rawDataEl = document.getElementById('stores-data');
+            if (rawDataEl && rawDataEl.textContent) {
+                window.currentStoresData = JSON.parse(rawDataEl.textContent);
             }
+        } catch(e) {
+            console.error("Lỗi JSON: ", e);
+        }
 
-            // TÌM KIẾM
-            window.filterStores = function() {
-                const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
-                const rows = document.querySelectorAll('.store-row');
-                rows.forEach(row => {
-                    const name = row.getAttribute('data-name');
-                    row.style.display = name.includes(keyword) ? '' : 'none';
-                });
-            }
-
-            // NẠP DỮ LIỆU VÀO MODAL
-            const modals = ['viewModal', 'editModal', 'deleteModal'];
-            modals.forEach(id => {
-                const modalEl = document.getElementById(id);
-                if (!modalEl) return;
-                
-                modalEl.addEventListener('show.bs.modal', event => {
-                    const button = event.relatedTarget;
-                    const storeId = button.getAttribute('data-bs-id');
-                    const store = storesData.find(s => s.Id == storeId);
-                    if (!store) return;
-
-                    if (id === 'viewModal') {
-                        document.getElementById('view-id').innerText = store.Id;
-                        document.getElementById('view-name').innerText = store.StoreName;
-                        document.getElementById('view-address').innerText = store.Address;
-                        document.getElementById('view-phone').innerText = store.Phone;
-                        document.getElementById('view-open').innerText = store.OpenTime;
-                        document.getElementById('view-close').innerText = store.CloseTime;
-                    }
-                    if (id === 'editModal') {
-                        document.getElementById('edit-store-id').value = store.Id;
-                        document.getElementById('edit-store-name').value = store.StoreName;
-                        document.getElementById('edit-store-address').value = store.Address;
-                        document.getElementById('edit-store-phone').value = store.Phone;
-                        document.getElementById('edit-store-open').value = store.OpenTime;
-                        document.getElementById('edit-store-close').value = store.CloseTime;
-                    }
-                    if (id === 'deleteModal') {
-                        document.getElementById('delete-store-id').value = store.Id;
-                    }
-                });
+        window.filterStores = function() {
+            var searchInput = document.querySelector('.table-wrapper #searchInput');
+            if (!searchInput) return;
+            
+            var keyword = searchInput.value.toLowerCase().trim();
+            var rows = document.querySelectorAll('.table-wrapper .store-row');
+            rows.forEach(row => {
+                var name = row.getAttribute('data-name');
+                row.style.display = name.includes(keyword) ? '' : 'none';
             });
-        });
+        }
+
+        if (window.storeModalHandler) {
+            document.removeEventListener('show.bs.modal', window.storeModalHandler);
+        }
+
+        window.storeModalHandler = function(event) {
+            var modal = event.target;
+            var button = event.relatedTarget;
+            
+            if (!button || !button.hasAttribute('data-bs-id')) return;
+
+            var storeId = button.getAttribute('data-bs-id');
+            var store = window.currentStoresData.find(s => s.Id == storeId);
+            if (!store) return;
+
+            if (modal.id === 'viewModal') {
+                var viewId = modal.querySelector('#view-id'); if(viewId) viewId.innerText = store.Id;
+                var viewName = modal.querySelector('#view-name'); if(viewName) viewName.innerText = store.StoreName;
+                var viewAddress = modal.querySelector('#view-address'); if(viewAddress) viewAddress.innerText = store.Address;
+                var viewPhone = modal.querySelector('#view-phone'); if(viewPhone) viewPhone.innerText = store.Phone;
+                var viewOpen = modal.querySelector('#view-open'); if(viewOpen) viewOpen.innerText = store.OpenTime;
+                var viewClose = modal.querySelector('#view-close'); if(viewClose) viewClose.innerText = store.CloseTime;
+            }
+            else if (modal.id === 'editModal') {
+                var editId = modal.querySelector('#edit-store-id'); if(editId) editId.value = store.Id;
+                var editName = modal.querySelector('#edit-store-name'); if(editName) editName.value = store.StoreName;
+                var editAddress = modal.querySelector('#edit-store-address'); if(editAddress) editAddress.value = store.Address;
+                var editPhone = modal.querySelector('#edit-store-phone'); if(editPhone) editPhone.value = store.Phone;
+                var editOpen = modal.querySelector('#edit-store-open'); if(editOpen) editOpen.value = store.OpenTime;
+                var editClose = modal.querySelector('#edit-store-close'); if(editClose) editClose.value = store.CloseTime;
+            }
+            else if (modal.id === 'deleteModal') {
+                var delId = modal.querySelector('#delete-store-id'); if(delId) delId.value = store.Id;
+            }
+        };
+
+        document.addEventListener('show.bs.modal', window.storeModalHandler);
     </script>
 </body>
 </html>

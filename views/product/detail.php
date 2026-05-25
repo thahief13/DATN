@@ -16,8 +16,9 @@ $relatedProducts = $productController->getRelatedProducts($storeId, $productId);
 $reviews = $productController->getReviews($productId);
 $categories = $categoryController->getAllCategories();
 $customerId = $_SESSION['CustomerId'] ?? 0;
-// Thêm logic tìm StoreProductId
+
 $storeProductId = 0;
+global $hostname, $username, $password, $dbname;
 $dbTemp = new mysqli($hostname, $username, $password, $dbname, $port);
 $resSP = $dbTemp->query("SELECT Id FROM storeproduct WHERE ProductId = $productId AND StoreId = $storeId");
 if($rowSP = $resSP->fetch_assoc()) {

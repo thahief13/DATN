@@ -1,21 +1,37 @@
 <?php
 require_once __DIR__ . '/../../env.php';
-// No need Payment/PaymentDetail models - using direct SQL
-
 
 class PaymentAdminController 
 {
-    public function getAllPayments()
+   public function getAllPayments()
     {
         global $hostname, $username, $password, $dbname, $port;
         $conn = new mysqli($hostname, $username, $password, $dbname, $port);
         
+        // TỰ ĐỘNG ĐỌC QUYỀN TỪ DATABASE DỰA TRÊN ID ĐĂNG NHẬP
+        $customerId = $_SESSION['CustomerId'] ?? 0;
+        $sqlUser = "SELECT Role, StoreId FROM customer WHERE Id = " . (int)$customerId;
+        $resUser = $conn->query($sqlUser);
+        $role = 1; 
+        $storeId = 0;
+        if ($resUser && $resUser->num_rows > 0) {
+            $u = $resUser->fetch_assoc();
+            $role = (int)$u['Role'];
+            $storeId = (int)$u['StoreId'];
+        }
+
         $sql = "SELECT p.Id, p.CustomerId, p.StoreId, p.Total, p.Status, p.CreatedAt, 
                        c.FirstName, c.LastName, s.StoreName 
                 FROM payment p 
                 LEFT JOIN customer c ON p.CustomerId = c.Id 
-                LEFT JOIN store s ON p.StoreId = s.Id 
-                ORDER BY p.CreatedAt DESC";
+                LEFT JOIN store s ON p.StoreId = s.Id";
+        
+        // NẾU LÀ QUẢN LÝ CHI NHÁNH -> CHỈ LẤY ĐƠN CỦA CHI NHÁNH ĐÓ
+        if ($role == 2 && $storeId > 0) {
+            $sql .= " WHERE p.StoreId = " . (int)$storeId;
+        }
+
+        $sql .= " ORDER BY p.CreatedAt DESC";
         
         $result = $conn->query($sql);
         $payments = [];
@@ -33,7 +49,6 @@ class PaymentAdminController
             $payments[] = $payment;
         }
         
-        $conn->close();
         return $payments;
     }
     
@@ -42,7 +57,6 @@ class PaymentAdminController
         global $hostname, $username, $password, $dbname, $port;
         $conn = new mysqli($hostname, $username, $password, $dbname, $port);
         
-    
         $stmt = $conn->prepare("UPDATE payment SET Status = ? WHERE Id = ?");
         $stmt->bind_param("si", $status, $paymentId);
         $result = $stmt->execute();
@@ -57,9 +71,6 @@ class PaymentAdminController
         global $hostname, $username, $password, $dbname, $port;
         $conn = new mysqli($hostname, $username, $password, $dbname, $port);
         
-        // SỬA LỖI & NÂNG CẤP: 
-        // 1. Phải JOIN qua StoreProductId thay vì ProductId
-        // 2. Lấy thêm cột IsAvailable từ bảng storeproduct để biết chi nhánh còn món này không
         $sql = "SELECT pd.Price, pd.Quantity as OrderQty, 
                        p.Title, p.Img, 
                        sp.IsAvailable 
@@ -84,4 +95,3 @@ class PaymentAdminController
     }
 }
 ?>
-

@@ -62,8 +62,8 @@ $storeWard = trim((string)($store->WardCode ?? '410110'));
 $ghn_error = '';
 $storeTotal = 0;
 $totalWeight = 0;
+global $hostname, $username, $password, $dbname;
 
-// Khởi tạo DB tạm để lấy DiscountPercent
 $dbTemp = new mysqli($hostname, $username, $password, $dbname, $port);
 
 foreach ($storeCarts as $cart) {
@@ -192,7 +192,8 @@ $grandTotal = $storeTotal + $storeShippingFee;
             <table style="width: 100%; border-collapse: collapse; text-align: center; min-width: 800px; background: #fff;">
                 <thead style="background: #ffb300; color: white; font-weight: bold; font-size: 16px;">
                     <tr>
-                        <th>Sản phẩm</th>
+                        <th style="padding: 15px; width: 15%;">Hình ảnh</th>
+                        <th style="width: 30%;">Sản phẩm</th>
                         <th>Đơn giá</th>
                         <th>Số lượng</th>
                         <th>Thành tiền</th>
@@ -212,9 +213,16 @@ $grandTotal = $storeTotal + $storeShippingFee;
                         $subtotal = $finalPrice * $cart->Quantity;
                     ?>
                         <tr>
-                            <td style="padding: 15px;"><?= htmlspecialchars($product->Title) ?></td>
+                            <td style="padding: 15px;">
+                                <?php if (!empty($product->Img)): ?>
+                                    <img src="../../img/SanPham/<?= htmlspecialchars($product->Img) ?>" alt="<?= htmlspecialchars($product->Title) ?>" style="width: 70px; height: 70px; object-fit: cover; border-radius: 10px; border: 2px solid #f0f0f0; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                                <?php else: ?>
+                                    <span class="text-muted">Không có ảnh</span>
+                                <?php endif; ?>
+                            </td>
+                            <td style="font-weight: 500; text-align: left; padding-left: 20px;"><?= htmlspecialchars($product->Title) ?></td>
                             <td><?= number_format($finalPrice, 0, ',', '.') ?> VNĐ</td>
-                            <td><?= $cart->Quantity ?></td>
+                            <td><span style="background: #f8f9fa; padding: 5px 15px; border-radius: 20px; font-weight: bold; border: 1px solid #ddd;"><?= $cart->Quantity ?></span></td>
                             <td style="font-weight:bold; color:#ffb300;"><?= number_format($subtotal, 0, ',', '.') ?> VNĐ</td>
                         </tr>
                     <?php endforeach; $dbTemp->close(); ?>

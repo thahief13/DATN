@@ -121,7 +121,7 @@
     <?php include "../header.php"; ?>
 
     <section class="hero">
-        <h1>CHUỖI CỬA HÀNG TRUNG NGUYÊN CÀ PHÊ</h1>
+        <h1>CHUỖI CỬA HÀNG TRUNG NGUYÊN CÀ PHÊ NHA TRANG</h1>
         <h2>CÀ PHÊ NĂNG LƯỢNG - CÀ PHÊ ĐỔI ĐỜI</h2>
 
         <p>

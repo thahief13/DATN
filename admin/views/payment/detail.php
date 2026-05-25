@@ -51,16 +51,25 @@ $canFulfill = true;
                             </div>
                             <div class="col-auto">
                                 <?php 
-                                    $status = mb_strtolower($paymentInfo->Status ?? '');
+                                    $status = mb_strtolower($paymentInfo->Status ?? '', 'UTF-8');
                                     $badgeClass = 'warning';
-                                    if ($status === 'đã giao' || $status === 'thành công') {
+                                    $displayStatus = mb_strtoupper($paymentInfo->Status ?? 'Chưa xác định', 'UTF-8'); 
+
+                                    // Xử lý đổi màu và dịch thuật các trạng thái
+                                    if ($status === 'pending' || $status === 'đang xử lý') {
+                                        $badgeClass = 'warning';
+                                        $displayStatus = 'ĐANG XỬ LÝ'; 
+                                    } elseif ($status === 'chờ thanh toán') {
+                                        $badgeClass = 'warning';
+                                        $displayStatus = 'CHỜ THANH TOÁN';
+                                    } elseif ($status === 'đã giao' || $status === 'thành công') {
                                         $badgeClass = 'success';
                                     } elseif ($status === 'hủy' || $status === 'đã hủy') {
                                         $badgeClass = 'danger';
                                     }
                                 ?>
                                 <span class="badge fs-5 bg-<?php echo $badgeClass; ?>">
-                                    <?php echo mb_strtoupper($paymentInfo->Status ?? 'Chưa xác định', 'UTF-8'); ?>
+                                    <?php echo $displayStatus; ?>
                                 </span>
                             </div>
                         </div>
@@ -69,7 +78,7 @@ $canFulfill = true;
                     <div class="card-body p-0">
                         <div class="row g-0">
                             <div class="col-md-6 p-4 border-end">
-                                <h5><i class="fas fa-user text-primary me-2"></i>Thông tin khách hàng</h5>
+                                <h5><i class="fas fa-user text-primary me-2"></i>Thông vị khách hàng</h5>
                                 <p class="mb-1"><strong>Tên:</strong> <?php echo htmlspecialchars($paymentInfo->CustomerName ?? 'N/A'); ?></p>
                                 <p class="mb-1"><strong>SĐT:</strong> <?php echo htmlspecialchars($paymentInfo->CustomerPhone ?? 'N/A'); ?></p>
                                 <p class="mb-0"><strong>Địa chỉ:</strong> <?php echo htmlspecialchars($paymentInfo->CustomerAddress ?? 'N/A'); ?></p>
@@ -93,7 +102,7 @@ $canFulfill = true;
                                         // Kiểm tra món này cửa hàng còn không
                                         $isAvailable = isset($detail['IsAvailable']) ? (int)$detail['IsAvailable'] : 1;
                                         if ($isAvailable === 0) {
-                                            $canFulfill = false; // Đánh cờ: Có món hết hàng
+                                            $canFulfill = false; 
                                         }
                                     ?>
                                     <div class="col-md-6 col-lg-4">
@@ -165,7 +174,6 @@ $canFulfill = true;
                             </a>
 
                             <?php 
-                            // Đã bổ sung thêm trạng thái 'chờ thanh toán'
                             if ($status === 'đang xử lý' || $status === 'pending' || $status === 'chờ thanh toán'): 
                             ?>
                             <div>
@@ -211,14 +219,14 @@ $canFulfill = true;
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert('✅ Thao tác thành công!');
+                    alert(' Thao tác thành công!');
                     location.reload();
                 } else {
-                    alert('❌ ' + data.message);
+                    alert(' ' + data.message);
                 }
             })
             .catch(err => {
-                alert('❌ Lỗi kết nối máy chủ!');
+                alert(' Lỗi kết nối máy chủ!');
             });
         }
     </script>

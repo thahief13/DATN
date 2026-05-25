@@ -153,19 +153,23 @@ $rolesJson = json_encode($roles, JSON_UNESCAPED_UNICODE);
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const rolesData = <?= $rolesJson ?>;
+   <script>
+        // 1. LƯU VÀO WINDOW ĐỂ KHÔNG BỊ LỖI KHAI BÁO LẠI (CONST) KHI CHUYỂN MENU
+        window.currentRolesData = <?= $rolesJson ?>;
 
         function filterRoles() {
-            const keyword = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('.role-row');
+            // Giới hạn vùng tìm kiếm bên trong bảng hiện tại để tránh bắt nhầm ID của trang cũ
+            const searchInput = document.querySelector('.table-wrapper #searchInput');
+            if (!searchInput) return;
+            
+            const keyword = searchInput.value.toLowerCase();
+            const rows = document.querySelectorAll('.table-wrapper .role-row');
             rows.forEach(row => {
                 const name = row.getAttribute('data-name');
                 row.style.display = name.includes(keyword) ? '' : 'none';
             });
         }
 
-        // ĐÃ SỬA ĐƯỜNG DẪN FETCH API
         function deleteRole(id, name) {
             if (confirm(`⚠️ CẢNH BÁO: Xóa vai trò "${name}"?\n\nĐiều này sẽ khiến tất cả nhân viên đang giữ vai trò này bị chuyển về "Không xác định".`)) {
                 fetch('role/process_delete.php', {
@@ -185,25 +189,39 @@ $rolesJson = json_encode($roles, JSON_UNESCAPED_UNICODE);
             }
         }
 
-        const modals = [document.getElementById('viewModal'), document.getElementById('editModal')];
-        modals.forEach(modal => {
-            if (!modal) return;
-            modal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const id = button.getAttribute('data-bs-id');
-                const role = rolesData.find(r => r.Id == id);
-                if (!role) return;
+        // 2. GẮN SỰ KIỆN TRÁNH TRÙNG LẶP VÀ DÙNG MODAL.QUERYSELECTOR
+        if (window.roleModalHandler) {
+            document.removeEventListener('show.bs.modal', window.roleModalHandler);
+        }
 
-                if (modal.id === 'viewModal') {
-                    document.getElementById('view-id').innerText = role.Id;
-                    document.getElementById('view-name').innerText = role.RoleName;
-                }
-                if (modal.id === 'editModal') {
-                    document.getElementById('edit-role-id').value = role.Id;
-                    document.getElementById('edit-role-name').value = role.RoleName;
-                }
-            });
-        });
+        window.roleModalHandler = function(event) {
+            const modal = event.target;
+            const button = event.relatedTarget;
+            
+            // Bỏ qua nếu không có nút click hoặc không có ID
+            if (!button || !button.hasAttribute('data-bs-id')) return;
+
+            const id = button.getAttribute('data-bs-id');
+            const role = window.currentRolesData.find(r => r.Id == id);
+            if (!role) return;
+
+            // FIX LỖI DOM: Dùng modal.querySelector thay vì document.getElementById
+            if (modal.id === 'viewModal') {
+                const viewId = modal.querySelector('#view-id');
+                const viewName = modal.querySelector('#view-name');
+                if (viewId) viewId.innerText = role.Id;
+                if (viewName) viewName.innerText = role.RoleName;
+            }
+            if (modal.id === 'editModal') {
+                const editId = modal.querySelector('#edit-role-id');
+                const editName = modal.querySelector('#edit-role-name');
+                if (editId) editId.value = role.Id;
+                if (editName) editName.value = role.RoleName;
+            }
+        };
+
+        // Lắng nghe sự kiện mở modal trên toàn trang
+        document.addEventListener('show.bs.modal', window.roleModalHandler);
     </script>
 </body>
 </html>

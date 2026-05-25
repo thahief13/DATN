@@ -3,11 +3,24 @@ require_once __DIR__ . '/../../config/env.php';
 require_once __DIR__ . '/../models/RevenueAdmin.php';
 
 class RevenueAdminController {
-    // ĐÃ THÊM: Tham số $day vào hàm
+    
     public function getRevenueByStore($day = 0, $month = 0, $year = 0) {
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
         $db->set_charset("utf8mb4");
+
+        // --- BẮT ĐẦU: TỰ ĐỘNG ĐỌC QUYỀN TỪ DATABASE ---
+        $customerId = $_SESSION['CustomerId'] ?? 0;
+        $sqlUser = "SELECT Role, StoreId FROM customer WHERE Id = " . (int)$customerId;
+        $resUser = $db->query($sqlUser);
+        $role = 1; 
+        $userStoreId = 0;
+        if ($resUser && $resUser->num_rows > 0) {
+            $u = $resUser->fetch_assoc();
+            $role = (int)$u['Role'];
+            $userStoreId = (int)$u['StoreId'];
+        }
+        // --- KẾT THÚC ĐỌC QUYỀN ---
 
         // Ép kiểu để an toàn tuyệt đối với cơ sở dữ liệu
         $day = (int)$day;
@@ -18,6 +31,11 @@ class RevenueAdminController {
                 FROM store s
                 JOIN payment p ON s.Id = p.StoreId AND p.Status IN ('paid', 'đã giao', 'thành công')
                 WHERE 1=1 ";
+
+        // CHẶN XEM TRỘM: Nếu là Quản lý chi nhánh (Role = 2) thì chỉ lấy doanh thu của chi nhánh đó
+        if ($role == 2 && $userStoreId > 0) {
+            $sql .= " AND s.Id = " . (int)$userStoreId;
+        }
 
         // Nối thêm điều kiện lọc theo tháng/năm
         if ($month > 0 && $year > 0) {

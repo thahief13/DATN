@@ -12,21 +12,28 @@ if (!isset($_SESSION['CustomerId'])) {
     exit();
 }
 
-require_once __DIR__ . '/../../../controllers/CustomerController.php';
-require_once __DIR__ . '/../../controllers/EmployeeAdminController.php';
-require_once __DIR__ . '/../../controllers/RoleAdminController.php';
-require_once __DIR__ . '/../../controllers/StoreAdminController.php';
+require_once __DIR__ . '/../../../env.php';
+global $hostname, $username, $password, $dbname, $port;
+$dbAuth = new mysqli($hostname, $username, $password, $dbname, $port);
+$authQuery = "SELECT Role, StoreId FROM customer WHERE Id = " . (int)$_SESSION['CustomerId'];
+$authResult = $dbAuth->query($authQuery);
+$authData = $authResult->fetch_assoc();
 
-$customerController = new CustomerController();
-$customer = $customerController->getCustomerById($_SESSION['CustomerId']);
+$userRole = (int)($authData['Role'] ?? 1);
+$userStoreId = (int)($authData['StoreId'] ?? 0);
+$dbAuth->close();
 
-if (!$customer || !$customer->Role) {
+if ($userRole == 0) { // Chặn người dùng bình thường
     header('Location: ../../../views/home/index.php');
     exit();
 }
 
+require_once __DIR__ . '/../../controllers/EmployeeAdminController.php';
+require_once __DIR__ . '/../../controllers/RoleAdminController.php';
+require_once __DIR__ . '/../../controllers/StoreAdminController.php';
+
 $employeeController = new EmployeeAdminController();
-$employeeAdmins = $employeeController->getAllEmployees();
+$employeeAdmins = $employeeController->getAllEmployees(); // Hàm trong Controller đã tự chặn quyền
 
 $roleController = new RoleAdminController();
 $roles = $roleController->getAllRoles();
@@ -42,6 +49,14 @@ foreach ($stores as $s) { $storeMap[$s->Id] = $s->StoreName; }
 
 $empArrayForJs = [];
 $uniqueStores = [];
+
+// --- BIẾN CHỨA DỮ LIỆU CHO BIỂU ĐỒ ---
+$chartRoleCount = [];
+$chartRoleSalary = [];
+$totalEmployees = 0;
+$totalSalary = 0;
+// -------------------------------------
+
 foreach ($employeeAdmins as $emp) {
     $rName = isset($roleMap[$emp->RoleId]) ? $roleMap[$emp->RoleId] : 'Chưa phân công';
     $sName = isset($storeMap[$emp->StoreId]) ? $storeMap[$emp->StoreId] : 'Chi nhánh #' . $emp->StoreId;
@@ -59,9 +74,24 @@ foreach ($employeeAdmins as $emp) {
     if ($emp->StoreId && !in_array($emp->StoreId, $uniqueStores)) {
         $uniqueStores[] = $emp->StoreId;
     }
+
+    // TÍNH TOÁN DỮ LIỆU BIỂU ĐỒ
+    if (!isset($chartRoleCount[$rName])) {
+        $chartRoleCount[$rName] = 0;
+        $chartRoleSalary[$rName] = 0;
+    }
+    $chartRoleCount[$rName]++;
+    $chartRoleSalary[$rName] += (float)$emp->Salary;
+    $totalEmployees++;
+    $totalSalary += (float)$emp->Salary;
 }
 sort($uniqueStores);
 $employeesJson = htmlspecialchars(json_encode($empArrayForJs, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+
+// Định dạng dữ liệu cho Javascript
+$chartLabels = array_keys($chartRoleCount);
+$chartDataCount = array_values($chartRoleCount);
+$chartDataSalary = array_values($chartRoleSalary);
 ?>
 
 <!DOCTYPE html>
@@ -71,12 +101,15 @@ $employeesJson = htmlspecialchars(json_encode($empArrayForJs, JSON_UNESCAPED_UNI
     <title>Quản lý nhân viên - Cafe Trung Nguyên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { background-color: #f8f9fa; }
-        .table-wrapper { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .table-wrapper { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
         .salary-result { font-size: 22px; font-weight: bold; color: #d35400; text-align: center; background: #fdf2e9; padding: 10px; border-radius: 8px; border: 1px dashed #e67e22; }
         .modal-header.bg-info { background-color: #0dcaf0 !important; }
         .employee-row td { vertical-align: middle; }
+        .stat-card { border-radius: 15px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
     </style>
 </head>
 <body>
@@ -96,8 +129,39 @@ $employeesJson = htmlspecialchars(json_encode($empArrayForJs, JSON_UNESCAPED_UNI
             </div>
         <?php endif; ?>
 
-        <h1 class="text-center mb-4"><i class="fas fa-users-cog"></i> Quản lý Nhân sự & Tiền lương</h1>
-        
+        <h2 class="text-center mb-4 fw-bold text-dark"><i class="fas fa-users-cog text-primary"></i> Tổng quan Nhân sự</h2>
+
+        <div class="row mb-4 g-4">
+            <div class="col-md-3">
+                <div class="stat-card bg-primary text-white p-4 h-100 d-flex flex-column justify-content-center align-items-center">
+                    <i class="fas fa-users fa-3x mb-3 opacity-75"></i>
+                    <h5 class="fw-light">Tổng nhân viên</h5>
+                    <h2 class="fw-bold mb-0"><?= $totalEmployees ?></h2>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="stat-card bg-white p-3 h-100">
+                    <h6 class="text-center fw-bold text-secondary mb-3">Cơ cấu theo Chức vụ</h6>
+                    <div style="height: 200px; display: flex; justify-content: center;">
+                        <canvas id="roleCountChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="stat-card bg-white p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold text-secondary mb-0">Quỹ lương theo Chức vụ</h6>
+                        <span class="badge bg-danger fs-6"><?= number_format($totalSalary, 0, ',', '.') ?> ₫</span>
+                    </div>
+                    <div style="height: 200px;">
+                        <canvas id="salaryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="table-wrapper">
             <div class="row mb-3 align-items-center">
                 <div class="col-md-4">
@@ -107,18 +171,33 @@ $employeesJson = htmlspecialchars(json_encode($empArrayForJs, JSON_UNESCAPED_UNI
                 </div>
                 
                 <div class="col-md-8 d-flex justify-content-end gap-2">
-                    <select id="storeFilter" class="form-select w-auto fw-bold" onchange="filterEmployees()">
-                        <option value="all">Tất cả chi nhánh</option>
-                        <?php foreach ($uniqueStores as $sId): ?>
-                            <option value="<?= $sId ?>">Chi nhánh #<?= $sId ?> - <?= htmlspecialchars($storeMap[$sId] ?? '') ?></option>
+                    <select id="storeFilter" class="form-select w-auto fw-bold" onchange="filterEmployees()" <?= ($userRole == 2) ? 'disabled' : '' ?>>
+                        <?php if ($userRole != 2): ?>
+                            <option value="all">Tất cả chi nhánh</option>
+                        <?php endif; ?>
+                        
+                        <?php 
+                        $hasMyStore = false;
+                        foreach ($uniqueStores as $sId): 
+                            if ($userRole == 2 && $sId != $userStoreId) continue;
+                            $hasMyStore = true;
+                        ?>
+                            <option value="<?= $sId ?>" <?= ($userRole == 2 && $sId == $userStoreId) ? 'selected' : '' ?>>
+                                Chi nhánh #<?= $sId ?> - <?= htmlspecialchars($storeMap[$sId] ?? '') ?>
+                            </option>
                         <?php endforeach; ?>
+                        
+                        <?php if ($userRole == 2 && !$hasMyStore): ?>
+                            <option value="<?= $userStoreId ?>" selected><?= htmlspecialchars($storeMap[$userStoreId] ?? 'Chi nhánh của bạn') ?></option>
+                        <?php endif; ?>
                     </select>
+
                     <input type="text" class="form-control w-50" id="searchInput" placeholder="Tìm tên nhân viên..." onkeyup="filterEmployees()">
                 </div>
             </div>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-hover text-center">
+                <table class="table table-bordered table-hover text-center align-middle">
                     <thead class="table-dark">
                         <tr>
                             <th>Mã NV</th>
@@ -130,36 +209,40 @@ $employeesJson = htmlspecialchars(json_encode($empArrayForJs, JSON_UNESCAPED_UNI
                         </tr>
                     </thead>
                     <tbody id="employeeTableBody">
-                        <?php foreach ($empArrayForJs as $emp): ?>
-                            <tr class="employee-row" data-store="<?= $emp['StoreId'] ?>" data-name="<?= htmlspecialchars(mb_strtolower($emp['FullName'], 'UTF-8'), ENT_QUOTES) ?>">
-                                <td><strong>#<?= $emp['Id'] ?></strong></td>
-                                <td class="text-start fw-bold text-primary"><?= htmlspecialchars($emp['FullName']) ?></td>
-                                <td><span class="badge bg-secondary"><?= htmlspecialchars($emp['StoreName']) ?></span></td>
-                                <td><strong class="text-success"><?= htmlspecialchars($emp['RoleName']) ?></strong></td>
-                                <td class="text-end"><?= number_format($emp['Salary'], 0, ',', '.') ?> ₫</td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-info text-white" title="Xem" 
-                                            onclick="viewEmployeeDetail(
-                                                '<?= $emp['Id'] ?>', 
-                                                '<?= htmlspecialchars($emp['FullName'], ENT_QUOTES) ?>', 
-                                                '<?= htmlspecialchars($emp['StoreName'], ENT_QUOTES) ?>', 
-                                                '<?= htmlspecialchars($emp['RoleName'], ENT_QUOTES) ?>', 
-                                                '<?= $emp['Salary'] ?>'
-                                            )">
-                                            <i class="fa fa-eye"></i>
-                                        </button>
-                                        
-                                        <button type="button" class="btn btn-warning" title="Sửa" data-bs-toggle="modal" data-bs-target="#editModal" data-bs-id="<?= $emp['Id'] ?>">
-                                            <i class="fa fa-edit"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-danger" title="Xóa" onclick="deleteEmployee(<?= $emp['Id'] ?>, '<?= htmlspecialchars($emp['FullName'], ENT_QUOTES) ?>')">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                        <?php if (empty($empArrayForJs)): ?>
+                            <tr><td colspan="6" class="text-center py-4">Chưa có nhân viên nào trong chi nhánh này.</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($empArrayForJs as $emp): ?>
+                                <tr class="employee-row" data-store="<?= $emp['StoreId'] ?>" data-name="<?= htmlspecialchars(mb_strtolower($emp['FullName'], 'UTF-8'), ENT_QUOTES) ?>">
+                                    <td><strong>#<?= $emp['Id'] ?></strong></td>
+                                    <td class="text-start fw-bold text-primary"><?= htmlspecialchars($emp['FullName']) ?></td>
+                                    <td><span class="badge bg-secondary"><?= htmlspecialchars($emp['StoreName']) ?></span></td>
+                                    <td><strong class="text-success"><?= htmlspecialchars($emp['RoleName']) ?></strong></td>
+                                    <td class="text-end fw-bold"><?= number_format($emp['Salary'], 0, ',', '.') ?> ₫</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-info" title="Xem" 
+                                                onclick="viewEmployeeDetail(
+                                                    '<?= $emp['Id'] ?>', 
+                                                    '<?= htmlspecialchars($emp['FullName'], ENT_QUOTES) ?>', 
+                                                    '<?= htmlspecialchars($emp['StoreName'], ENT_QUOTES) ?>', 
+                                                    '<?= htmlspecialchars($emp['RoleName'], ENT_QUOTES) ?>', 
+                                                    '<?= $emp['Salary'] ?>'
+                                                )">
+                                                <i class="fa fa-eye"></i>
+                                            </button>
+                                            
+                                            <button type="button" class="btn btn-outline-warning" title="Sửa" data-bs-toggle="modal" data-bs-target="#editModal" data-bs-id="<?= $emp['Id'] ?>">
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" title="Xóa" onclick="deleteEmployee(<?= $emp['Id'] ?>, '<?= htmlspecialchars($emp['FullName'], ENT_QUOTES) ?>')">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -201,7 +284,10 @@ $employeesJson = htmlspecialchars(json_encode($empArrayForJs, JSON_UNESCAPED_UNI
                             <label class="fw-bold">Chi nhánh</label>
                             <select class="form-select" id="edit-store-id" name="store_id" required>
                                 <?php foreach ($stores as $s): ?>
-                                    <option value="<?= $s->Id ?>"><?= htmlspecialchars($s->StoreName) ?></option>
+                                    <?php if ($userRole == 2 && $s->Id != $userStoreId) continue; ?>
+                                    <option value="<?= $s->Id ?>" <?= ($userRole == 2 && $s->Id == $userStoreId) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($s->StoreName) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -238,7 +324,10 @@ $employeesJson = htmlspecialchars(json_encode($empArrayForJs, JSON_UNESCAPED_UNI
                             <label class="fw-bold">Chi nhánh</label>
                             <select class="form-select" name="store_id" required>
                                 <?php foreach ($stores as $s): ?>
-                                    <option value="<?= $s->Id ?>"><?= htmlspecialchars($s->StoreName) ?></option>
+                                    <?php if ($userRole == 2 && $s->Id != $userStoreId) continue; ?>
+                                    <option value="<?= $s->Id ?>" <?= ($userRole == 2 && $s->Id == $userStoreId) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($s->StoreName) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -260,35 +349,82 @@ $employeesJson = htmlspecialchars(json_encode($empArrayForJs, JSON_UNESCAPED_UNI
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let employeesData = [];
+        // --- KHỞI TẠO BIỂU ĐỒ ---
+        (function() {
+            const bgColors = ['#0dcaf0', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14'];
+            
+            // 1. Biểu đồ tròn: Cơ cấu nhân sự
+            const roleCanvas = document.getElementById('roleCountChart');
+            if (roleCanvas) {
+                if (window.roleChartInstance) window.roleChartInstance.destroy(); // Hủy biểu đồ cũ nếu có
+                window.roleChartInstance = new Chart(roleCanvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: <?= json_encode($chartLabels) ?>,
+                        datasets: [{
+                            data: <?= json_encode($chartDataCount) ?>,
+                            backgroundColor: bgColors,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                });
+            }
 
-        // HÀM MỚI: Bơm thẳng dữ liệu vào form Xem Chi Tiết
+            // 2. Biểu đồ cột: Quỹ lương
+            const salaryCanvas = document.getElementById('salaryChart');
+            if (salaryCanvas) {
+                if (window.salaryChartInstance) window.salaryChartInstance.destroy(); // Hủy biểu đồ cũ nếu có
+                window.salaryChartInstance = new Chart(salaryCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: <?= json_encode($chartLabels) ?>,
+                        datasets: [{
+                            label: 'Tổng lương (VNĐ)',
+                            data: <?= json_encode($chartDataSalary) ?>,
+                            backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                            borderRadius: 5
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+        })();
+
+        var employeesData = [];
+        try {
+            var dataElement = document.getElementById('employees-data');
+            if (dataElement) { employeesData = JSON.parse(dataElement.getAttribute('data-json')); }
+        } catch(e) { console.error("Lỗi JSON: ", e); }
+
         function viewEmployeeDetail(id, name, store, role, salary) {
             document.getElementById('view-id').innerText = id;
             document.getElementById('view-name').innerText = name;
             document.getElementById('view-store-id').innerText = store;
             document.getElementById('view-role-id').innerText = role;
             document.getElementById('view-salary').innerText = new Intl.NumberFormat('vi-VN').format(salary) + " ₫";
-            
-            // Kích hoạt Modal lên
-            var viewModal = new bootstrap.Modal(document.getElementById('viewModal'));
-            viewModal.show();
+            new bootstrap.Modal(document.getElementById('viewModal')).show();
         }
 
         function deleteEmployee(id, name) {
             if (confirm(`Bạn có chắc muốn xóa nhân viên này?`)) {
-                const formData = new FormData();
+                var formData = new FormData();
                 formData.append('employeeId', id);
                 
                 fetch('employee/process_delete.php', { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) { 
-                        alert('✅ Đã xóa thành công!'); location.reload(); 
+                        alert(' Đã xóa thành công!'); location.reload(); 
                     } else { 
-                        alert('❌ Lỗi: ' + data.message); 
+                        alert(' Lỗi: ' + data.message); 
                     }
-                }).catch(err => alert('❌ Lỗi kết nối máy chủ!'));
+                }).catch(err => alert(' Lỗi kết nối máy chủ!'));
             }
         }
 
@@ -298,43 +434,43 @@ $employeesJson = htmlspecialchars(json_encode($empArrayForJs, JSON_UNESCAPED_UNI
         }
 
         function filterEmployees() {
-            const storeId = document.getElementById('storeFilter').value;
-            const searchKeyword = removeAccents(document.getElementById('searchInput').value);
-            const rows = document.querySelectorAll('.employee-row');
+            var storeId = document.getElementById('storeFilter').value;
+            var searchKeyword = removeAccents(document.getElementById('searchInput').value);
+            var rows = document.querySelectorAll('.employee-row');
             
             rows.forEach(row => {
-                const rowStore = row.getAttribute('data-store');
-                const rowName = removeAccents(row.getAttribute('data-name') || "");
-                const matchStore = (storeId === 'all' || rowStore === storeId);
-                const matchName = rowName.includes(searchKeyword);
+                var rowStore = row.getAttribute('data-store');
+                var rowName = removeAccents(row.getAttribute('data-name') || "");
+                var matchStore = (storeId === 'all' || rowStore === storeId);
+                var matchName = rowName.includes(searchKeyword);
                 row.style.display = (matchStore && matchName) ? '' : 'none';
             });
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                const dataElement = document.getElementById('employees-data');
-                if (dataElement) { employeesData = JSON.parse(dataElement.getAttribute('data-json')); }
-            } catch(e) { console.error("Lỗi JSON: ", e); }
+        if (window.editEmployeeHandler) { document.removeEventListener('show.bs.modal', window.editEmployeeHandler); }
 
-            // Giữ lại logic cũ cho Modal Edit vì nó đang hoạt động bình thường
-            const editModal = document.getElementById('editModal');
-            if (editModal) {
-                editModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget.closest('button');
-                    if (!button) return;
-                    const id = button.getAttribute('data-bs-id');
-                    const emp = employeesData.find(e => e.Id == id);
-                    if (!emp) return;
+        window.editEmployeeHandler = function(event) {
+            var modal = event.target;
+            if (modal.id !== 'editModal') return;
 
-                    document.getElementById('edit-employee-id').value = emp.Id;
-                    document.getElementById('edit-name').value = emp.FullName;
-                    document.getElementById('edit-store-id').value = emp.StoreId;
-                    document.getElementById('edit-role-id').value = emp.RoleId;
-                    document.getElementById('edit-salary').value = emp.Salary;
-                });
-            }
-        });
+            var button = event.relatedTarget;
+            if (!button) return;
+            
+            var buttonClosest = button.closest('button');
+            if (!buttonClosest || !buttonClosest.hasAttribute('data-bs-id')) return;
+
+            var id = buttonClosest.getAttribute('data-bs-id');
+            var emp = employeesData.find(e => e.Id == id);
+            if (!emp) return;
+
+            document.getElementById('edit-employee-id').value = emp.Id;
+            document.getElementById('edit-name').value = emp.FullName;
+            document.getElementById('edit-store-id').value = emp.StoreId;
+            document.getElementById('edit-role-id').value = emp.RoleId;
+            document.getElementById('edit-salary').value = emp.Salary;
+        };
+
+        document.addEventListener('show.bs.modal', window.editEmployeeHandler);
     </script>
 </body>
 </html>

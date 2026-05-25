@@ -3,11 +3,39 @@ require_once __DIR__ . '/../../config/env.php';
 require_once __DIR__ . '/../models/EmployeeAdmin.php';
 
 class EmployeeAdminController {
-    public function getAllEmployees() {
+    
+    // Thêm tham số $filterStoreId để hỗ trợ lọc (Mặc định = 0)
+    public function getAllEmployees($filterStoreId = 0) {
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
         $db->set_charset("utf8mb4");
-        $sql = "SELECT * FROM employee ORDER BY Id ASC";
+
+        // --- BẢO MẬT: ĐỌC QUYỀN TRỰC TIẾP TỪ DATABASE ---
+        $customerId = $_SESSION['CustomerId'] ?? 0;
+        $sqlUser = "SELECT Role, StoreId FROM customer WHERE Id = " . (int)$customerId;
+        $resUser = $db->query($sqlUser);
+        
+        $role = 1; // Mặc định là Admin
+        $userStoreId = 0;
+        if ($resUser && $resUser->num_rows > 0) {
+            $u = $resUser->fetch_assoc();
+            $role = (int)$u['Role'];
+            $userStoreId = (int)$u['StoreId'];
+        }
+
+        // ÉP BUỘC: Nếu là quản lý chi nhánh (Role 2), bỏ qua yêu cầu khác, chỉ lấy nhân viên của họ
+        if ($role == 2 && $userStoreId > 0) {
+            $filterStoreId = $userStoreId;
+        }
+
+        $sql = "SELECT * FROM employee WHERE 1=1";
+        
+        if ($filterStoreId > 0) {
+            $sql .= " AND StoreId = " . (int)$filterStoreId;
+        }
+        
+        $sql .= " ORDER BY Id ASC";
+        
         $result = $db->query($sql);
         $employees = [];
         if ($result && $result->num_rows > 0) {
@@ -36,7 +64,7 @@ class EmployeeAdminController {
         
         $stmt->bind_param("siid", $employee->FullName, $employee->StoreId, $employee->RoleId, $employee->Salary);
         $isSuccess = $stmt->execute();
-        $error = $stmt->error; // Bắt ngay lỗi nếu MySQL từ chối
+        $error = $stmt->error;
         
         $stmt->close(); $db->close();
         return $isSuccess ? true : "Lỗi Database: " . $error;

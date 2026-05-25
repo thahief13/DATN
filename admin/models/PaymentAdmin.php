@@ -1,14 +1,25 @@
 <?php
 require_once '../../../env.php';
 
-
 class PaymentAdmin 
 {
-    public function getPaymentById($paymentId)
+ public function getPaymentById($paymentId)
     {
         global $hostname, $username, $password, $dbname, $port;
         $conn = new mysqli($hostname, $username, $password, $dbname, $port);
         
+        // TỰ ĐỘNG ĐỌC QUYỀN TỪ DATABASE DỰA TRÊN ID ĐĂNG NHẬP
+        $customerId = $_SESSION['CustomerId'] ?? 0;
+        $sqlUser = "SELECT Role, StoreId FROM customer WHERE Id = " . (int)$customerId;
+        $resUser = $conn->query($sqlUser);
+        $role = 1; 
+        $storeId = 0;
+        if ($resUser && $resUser->num_rows > 0) {
+            $u = $resUser->fetch_assoc();
+            $role = (int)$u['Role'];
+            $storeId = (int)$u['StoreId'];
+        }
+
         $sql = "SELECT p.*, 
                        c.FirstName, c.LastName, c.Phone as CustomerPhone, c.Address as CustomerAddress,
                        s.StoreName, s.Phone as StorePhone, s.Address as StoreAddress,
@@ -18,6 +29,10 @@ class PaymentAdmin
                 LEFT JOIN store s ON p.StoreId = s.Id
                 LEFT JOIN shipment sh ON p.Id = sh.PaymentId
                 WHERE p.Id = ?";
+
+        if ($role == 2 && $storeId > 0) {
+            $sql .= " AND p.StoreId = " . (int)$storeId;
+        }
         
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $paymentId);
@@ -37,4 +52,3 @@ class PaymentAdmin
     }
 }
 ?>
-
