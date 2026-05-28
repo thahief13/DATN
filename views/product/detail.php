@@ -236,24 +236,39 @@ $reviews = $productController->getReviews($storeProductId);
                         <img src="../../img/SanPham/<?php echo $product->Img; ?>" class="img-thumbnail w-100" alt="<?php echo $product->Title; ?>">
                     </div>
                     <div class="col-md-6">
-                        <h2 class="product-title"><?php echo $product->Title; ?></h2>
-                        <p>Danh mục: <?php echo $product->CategoryTitle; ?></p>
-                        <p class="product-price"><?php echo number_format($product->Price, 0, ",", "."); ?> VND</p>
-
-                        <!-- Star Rating -->
-                        <div class="star-rating mb-3">
-                            <?php
-                            $fullStars = floor($product->Rate);
-                            $halfStar = ($product->Rate - $fullStars) >= 0.5 ? 1 : 0;
-                            $emptyStars = 5 - $fullStars - $halfStar;
-                            for ($i = 0; $i < $fullStars; $i++) echo '<i class="fa fa-star"></i>';
-                            if ($halfStar) echo '<i class="fa fa-star-half-alt"></i>';
-                            for ($i = 0; $i < $emptyStars; $i++) echo '<i class="fa fa-star-o"></i>';
-                            ?>
+                       <div class="mb-3 d-flex align-items-baseline">
+                            <span class="fw-bold fs-5 text-dark me-2" style="min-width: 130px;">Tên sản phẩm: </span>
+                            <h2 class="product-title mb-0" style="color: #333; font-size: 32px;"><?php echo $product->Title; ?></h2>
+                        </div>
+                        
+                        <div class="mb-3 d-flex align-items-baseline">
+                            <span class="fw-bold fs-5 text-dark me-2" style="min-width: 130px;">Danh mục: </span>
+                            <span class="fs-5 text-secondary"><?php echo $product->CategoryTitle; ?></span>
+                        </div>
+                        
+                        <div class="mb-3 d-flex align-items-baseline">
+                            <span class="fw-bold fs-5 text-dark me-2" style="min-width: 130px;">Giá: </span>
+                            <span class="product-price fw-bold" style="color: #e67e22; font-size: 26px;"><?php echo number_format($product->Price, 0, ",", "."); ?> VND</span>
                         </div>
 
-                        <p><?php echo $product->Content; ?></p>
+                        <div class="star-rating mb-3 d-flex align-items-center">
+                            <span class="fw-bold fs-5 text-dark me-2" style="min-width: 130px;">Số sao: </span>
+                            <div style="font-size: 22px;">
+                                <?php
+                                $fullStars = floor($product->Rate);
+                                $halfStar = ($product->Rate - $fullStars) >= 0.5 ? 1 : 0;
+                                $emptyStars = 5 - $fullStars - $halfStar;
+                                for ($i = 0; $i < $fullStars; $i++) echo '<i class="fa fa-star text-warning"></i>';
+                                if ($halfStar) echo '<i class="fa fa-star-half-alt text-warning"></i>';
+                                for ($i = 0; $i < $emptyStars; $i++) echo '<i class="fa fa-star-o text-muted"></i>';
+                                ?>
+                            </div>
+                        </div>
 
+                        <div class="mb-4 d-flex align-items-start">
+                            <span class="fw-bold fs-5 text-dark me-2" style="min-width: 130px;">Nhận xét: </span>
+                            <span class="fs-6 text-secondary lh-base"><?php echo $product->Content; ?></span>
+                        </div>
                         <!-- Quantity -->
                         <div class="input-group quantity mb-4" style="width:140px;">
                             <button class="btn btn-light border rounded-circle" id="decreaseQuantity"><i class="fa fa-minus"></i></button>
@@ -391,17 +406,27 @@ $reviews = $productController->getReviews($storeProductId);
                                     <?php foreach ($reviews as $review): ?>
                                         <div class="review-item mb-4 p-3 border rounded">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <div class="star-rating mb-1">
-                                                    <?php
-                                                    for ($i = 1; $i <= 5; $i++) {
-                                                        if ($i <= $review->Rating) {
+                                               <div class="star-rating mb-1">
+                                                        <?php
+                                                        $r_rating = floatval($review->Rating);
+                                                        $fullStars = floor($r_rating);
+                                                        $halfStar = ($r_rating - $fullStars) >= 0.5 ? 1 : 0;
+                                                        $emptyStars = 5 - $fullStars - $halfStar;
+
+                                                        
+                                                        for ($i = 0; $i < $fullStars; $i++) {
                                                             echo '<i class="fa fa-star text-warning"></i>';
-                                                        } else {
+                                                        }
+                                                        
+                                                        if ($halfStar) {
+                                                            echo '<i class="fa fa-star-half-alt text-warning"></i>';
+                                                        }
+                                                        
+                                                        for ($i = 0; $i < $emptyStars; $i++) {
                                                             echo '<i class="fa fa-star-o text-muted"></i>';
                                                         }
-                                                    }
-                                                    ?>
-                                                </div>
+                                                        ?>
+                                                    </div>
                                                 <small class="text-muted"><?php echo date('d/m/Y H:i', strtotime($review->CreatedAt)); ?></small>
                                             </div>
                                             <h6 class="fw-bold"><?php echo htmlspecialchars($review->CustomerName); ?></h6>
@@ -503,57 +528,68 @@ $reviews = $productController->getReviews($storeProductId);
             <?php include '../footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
-    <script>
-        // Star rating interactive
+   <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // LOGIC CHỌN NỬA SAO (0.5, 3.5, 4.5,...)
             const stars = document.querySelectorAll('.rating-star');
             const ratingValue = document.getElementById('ratingValue');
+            const starContainer = document.getElementById('starRating');
+
+            function updateStarsUI(rating) {
+                stars.forEach(s => {
+                    const sRating = parseFloat(s.dataset.rating);
+                    s.className = 'fa rating-star'; // Reset class
+                    s.style.color = '#ddd'; // Reset màu xám
+
+                    if (sRating <= rating) {
+                        s.classList.add('fa-star', 'active');
+                        s.style.color = '#ffc107'; // Vàng đậm
+                    } else if (sRating - 0.5 === parseFloat(rating)) {
+                        s.classList.add('fa-star-half-stroke', 'active'); // Icon nửa sao
+                        s.style.color = '#ffc107';
+                    } else {
+                        s.classList.add('fa-star');
+                    }
+                });
+            }
+
             stars.forEach(star => {
-                star.addEventListener('click', function() {
-                    const rating = this.dataset.rating;
-                    ratingValue.value = rating;
-                    stars.forEach(s => {
-                        if (s.dataset.rating <= rating) {
-                            s.classList.add('active');
-                        } else {
-                            s.classList.remove('active');
-                        }
-                    });
+                // Khi rê chuột: Tính toán vị trí chuột để biết là nửa sao hay nguyên sao
+                star.addEventListener('mousemove', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const isHalf = x < (rect.width / 2);
+                    const baseRating = parseFloat(this.dataset.rating);
+                    const currentRating = isHalf ? baseRating - 0.5 : baseRating;
+                    
+                    updateStarsUI(currentRating);
                 });
-                
-                star.addEventListener('mouseover', function() {
-                    const rating = this.dataset.rating;
-                    stars.forEach(s => {
-                        if (s.dataset.rating <= rating) {
-                            s.style.color = '#ffc107';
-                        } else {
-                            s.style.color = '#ddd';
-                        }
-                    });
+
+                // Khi click chuột: Lưu giá trị chính thức
+                star.addEventListener('click', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const isHalf = x < (rect.width / 2);
+                    const baseRating = parseFloat(this.dataset.rating);
+                    
+                    ratingValue.value = isHalf ? baseRating - 0.5 : baseRating;
                 });
             });
             
-            document.querySelectorAll('.star-rating-input').forEach(container => {
-                container.addEventListener('mouseleave', function() {
-                    const rating = ratingValue.value;
-                    stars.forEach(s => {
-                        if (s.dataset.rating <= rating && rating > 0) {
-                            s.classList.add('active');
-                        } else {
-                            s.classList.remove('active');
-                        }
-                    });
+            // Khi chuột rời khỏi khu vực sao, phục hồi lại giá trị đã click
+            if (starContainer) {
+                starContainer.addEventListener('mouseleave', function() {
+                    updateStarsUI(ratingValue.value || 0);
                 });
-            });
+            }
             
-            // Review form submit
+            // XỬ LÝ NÚT GỬI ĐÁNH GIÁ (GIỮ NGUYÊN)
             const reviewForm = document.getElementById('reviewForm');
             if (reviewForm) {
                 reviewForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    
-                    if (parseInt(ratingValue.value) === 0) {
-                        alert('Vui lòng chọn số sao đánh giá');
+                    if (parseFloat(ratingValue.value) === 0) {
+                        alert('Vui lòng chọn số sao đánh giá!');
                         return;
                     }
                     
@@ -569,8 +605,7 @@ $reviews = $productController->getReviews($storeProductId);
                             showTopToast(data.message);
                             reviewForm.reset();
                             ratingValue.value = '0';
-                            stars.forEach(s => s.classList.remove('active'));
-                            // Reload page to show new review
+                            updateStarsUI(0);
                             setTimeout(() => location.reload(), 1500);
                         } else {
                             showTopToast(data.message, 4000);
@@ -578,7 +613,6 @@ $reviews = $productController->getReviews($storeProductId);
                     })
                     .catch(error => {
                         showTopToast('Có lỗi xảy ra. Vui lòng thử lại!');
-                        console.error('Error:', error);
                     });
                 });
             }

@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_t
     $customerId = (int)($_SESSION['CustomerId'] ?? 0);
     $productId = intval($_POST['product_id'] ?? 0);
     $storeId = intval($_POST['store_id'] ?? 0);
-    $quantity = max(1, intval($_POST['quantity'] ?? 1)); // đảm bảo >=1
+    $quantity = max(1, intval($_POST['quantity'] ?? 1)); 
 
     if ($customerId <= 0) {
         $response['message'] = "Vui lòng đăng nhập để đặt hàng!";

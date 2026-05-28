@@ -349,14 +349,14 @@ $chartDataSalary = array_values($chartRoleSalary);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // --- KHỞI TẠO BIỂU ĐỒ ---
-        (function() {
+        // --- KHỞI TẠO BIỂU ĐỒ THÔNG MINH (CHỐNG LỖI AJAX) ---
+        function initEmployeeCharts() {
             const bgColors = ['#0dcaf0', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14'];
             
             // 1. Biểu đồ tròn: Cơ cấu nhân sự
             const roleCanvas = document.getElementById('roleCountChart');
             if (roleCanvas) {
-                if (window.roleChartInstance) window.roleChartInstance.destroy(); // Hủy biểu đồ cũ nếu có
+                if (window.roleChartInstance) window.roleChartInstance.destroy();
                 window.roleChartInstance = new Chart(roleCanvas.getContext('2d'), {
                     type: 'doughnut',
                     data: {
@@ -374,7 +374,7 @@ $chartDataSalary = array_values($chartRoleSalary);
             // 2. Biểu đồ cột: Quỹ lương
             const salaryCanvas = document.getElementById('salaryChart');
             if (salaryCanvas) {
-                if (window.salaryChartInstance) window.salaryChartInstance.destroy(); // Hủy biểu đồ cũ nếu có
+                if (window.salaryChartInstance) window.salaryChartInstance.destroy();
                 window.salaryChartInstance = new Chart(salaryCanvas.getContext('2d'), {
                     type: 'bar',
                     data: {
@@ -394,7 +394,18 @@ $chartDataSalary = array_values($chartRoleSalary);
                     }
                 });
             }
-        })();
+        }
+
+        // Tự động kiểm tra và tải thư viện Chart.js nếu tải trang qua AJAX
+        if (typeof Chart === 'undefined') {
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+            script.onload = initEmployeeCharts; // Tải xong mới vẽ
+            document.head.appendChild(script);
+        } else {
+            initEmployeeCharts(); // Đã có thư viện thì vẽ luôn
+        }
+        // -------------------------
 
         var employeesData = [];
         try {
@@ -420,11 +431,11 @@ $chartDataSalary = array_values($chartRoleSalary);
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) { 
-                        alert(' Đã xóa thành công!'); location.reload(); 
+                        alert('✅ Đã xóa thành công!'); location.reload(); 
                     } else { 
-                        alert(' Lỗi: ' + data.message); 
+                        alert('❌ Lỗi: ' + data.message); 
                     }
-                }).catch(err => alert(' Lỗi kết nối máy chủ!'));
+                }).catch(err => alert('❌ Lỗi kết nối máy chủ!'));
             }
         }
 

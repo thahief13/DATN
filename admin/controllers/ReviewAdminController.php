@@ -9,12 +9,11 @@ class ReviewAdminController
         $conn = new mysqli($hostname, $username, $password, $dbname, $port);
         $conn->set_charset("utf8mb4");
 
-        // --- BẢO MẬT: ĐỌC QUYỀN TRỰC TIẾP TỪ DATABASE ---
         $customerId = $_SESSION['CustomerId'] ?? 0;
         $sqlUser = "SELECT Role, StoreId FROM customer WHERE Id = " . (int)$customerId;
         $resUser = $conn->query($sqlUser);
         
-        $role = 1; // Mặc định là Admin
+        $role = 1; 
         $userStoreId = 0;
         
         if ($resUser && $resUser->num_rows > 0) {
@@ -23,12 +22,11 @@ class ReviewAdminController
             $userStoreId = (int)$u['StoreId'];
         }
 
-        // ÉP BUỘC: Nếu là quản lý chi nhánh (Role 2), bỏ qua storeId người dùng chọn, chỉ lấy của họ
         if ($role == 2 && $userStoreId > 0) {
             $storeId = $userStoreId;
         }
 
-        $sql = "SELECT r.Id, r.Rating, r.Comment, r.CreatedAt, 
+        $sql = "SELECT r.Id, r.Rating, r.Comment, r.AiSentiment, r.CreatedAt, 
                        c.FirstName, c.LastName, 
                        p.Title AS ProductName, p.Img,
                        s.StoreName 
@@ -43,8 +41,12 @@ class ReviewAdminController
             $sql .= " AND s.Id = " . (int)$storeId;
         }
 
-        if ($ratingType === 'good') $sql .= " AND r.Rating >= 4";
-        elseif ($ratingType === 'bad') $sql .= " AND r.Rating <= 3";
+        // LỌC CHỈ CÒN TỐT HOẶC XẤU
+        if ($ratingType === 'good') {
+            $sql .= " AND (r.AiSentiment = 'TOT' OR (r.AiSentiment IS NULL AND r.Rating >= 4))";
+        } elseif ($ratingType === 'bad') {
+            $sql .= " AND (r.AiSentiment = 'XAU' OR (r.AiSentiment IS NULL AND r.Rating < 4))";
+        }
 
         $sql .= " ORDER BY r.CreatedAt DESC";
 

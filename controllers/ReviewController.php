@@ -34,7 +34,7 @@ class ReviewController {
         return $reviews;
     } // Kết thúc hàm getReviews
 
-    public function addReview($storeProductId, $customerId, $rating, $comment) {
+   public function addReview($storeProductId, $customerId, $rating, $comment, $aiSentiment = 'TRUNG_TINH') {
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
         
@@ -45,9 +45,10 @@ class ReviewController {
             return false; 
         }
         
-        $sql = "INSERT INTO productreview (StoreProductId, CustomerId, Rating, Comment) VALUES (" . 
-               intval($storeProductId) . ", " . intval($customerId) . ", " . intval($rating) . ", '" . 
-               $db->real_escape_string($comment) . "')";
+        $sql = "INSERT INTO productreview (StoreProductId, CustomerId, Rating, Comment, AiSentiment) VALUES (" . 
+               intval($storeProductId) . ", " . intval($customerId) . ", " . floatval($rating) . ", '" . 
+               $db->real_escape_string($comment) . "', '" . 
+               $db->real_escape_string($aiSentiment) . "')";
         
         $result = $db->query($sql);
         $db->close();

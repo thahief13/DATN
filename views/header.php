@@ -315,4 +315,83 @@
 
     </div>
 
+    <div id="orderToastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px;"></div>
+
+<style>
+    .order-toast {
+        background-color: #fff;
+        color: #333;
+        border-left: 5px solid #28a745; 
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        width: 320px;
+        transform: translateX(120%);
+        transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.4s ease;
+        opacity: 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .order-toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    .order-toast i {
+        color: #28a745;
+        font-size: 24px;
+        margin-top: 2px;
+    }
+    .order-toast.canceled { border-left-color: #dc3545; } 
+    .order-toast.canceled i { color: #dc3545; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // SỬ DỤNG PHP ĐỂ TẠO ĐƯỜNG DẪN TUYỆT ĐỐI (VD: http://localhost/app/views/check_order_status.php)
+    const checkUrl = 'http://<?php echo $_SERVER["HTTP_HOST"]; ?>/app/views/check_order_status.php';
+
+    setInterval(function() {
+        fetch(checkUrl) 
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data.length > 0) {
+                data.data.forEach(noti => {
+                    showOrderNotification(noti.Message, noti.OrderId);
+                });
+            }
+        })
+        .catch(err => console.log('Đang chờ kết nối kiểm tra đơn hàng...'));
+    }, 8000); 
+
+    function showOrderNotification(message, orderId) {
+        const container = document.getElementById('orderToastContainer');
+        if (!container) return; // Đề phòng lỗi thiếu thẻ div
+        
+        const toast = document.createElement('div');
+        
+        // Nếu là thông báo hủy đơn thì đổi màu đỏ
+        const isCanceled = message.includes('HỦY');
+        toast.className = `order-toast ${isCanceled ? 'canceled' : ''}`;
+        
+        toast.innerHTML = `
+            <i class="fas ${isCanceled ? 'fa-times-circle' : 'fa-check-circle'}"></i>
+            <div>
+                <strong style="font-size: 15px;">Cập nhật Đơn hàng #${orderId}</strong>
+                <p style="margin: 5px 0 0; font-size: 14px; color: #555;">${message}</p>
+            </div>
+        `;
+        container.appendChild(toast);
+        
+        setTimeout(() => toast.classList.add('show'), 100);
+        
+        // Tự động biến mất sau 7 giây
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 500); 
+        }, 7000); 
+    }
+});
+</script>
 </header>

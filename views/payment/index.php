@@ -70,10 +70,46 @@ $payments = $paymentController->getCustomerPayments($currentCustomerId);
         }
         .tooltip { z-index: 9999 !important; }
         .btn-group .btn { position: relative !important; }
+
+        /* =========================================================
+           CSS CHO BANNER THÔNG BÁO TỪ TRÊN XUỐNG GIỐNG ẢNH BẠN GỬI
+           ========================================================= */
+        #top-banner-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 10000;
+            pointer-events: none;
+        }
+        .custom-top-banner {
+            background-color: #f39c12; /* Màu vàng cam y hệt ảnh */
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 14px 40px;
+            border-radius: 0 0 8px 8px; /* Chỉ bo tròn góc dưới */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            display: inline-block;
+            pointer-events: auto;
+            transform: translateY(-100%);
+            animation: slideDown 0.4s ease-out forwards;
+            margin-top: 0;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(0); }
+            to { transform: translateY(-100%); }
+        }
     </style>
 </head>
 
 <body>
+    <div id="top-banner-container"></div>
 
     <div class="page-header">
         <h1 class="fw-bold">Lịch Sử Mua Hàng 🧾</h1>
@@ -82,87 +118,87 @@ $payments = $paymentController->getCustomerPayments($currentCustomerId);
         <div class="payment-list-container">
             <div class="table-responsive">
                 <table class="payment-table table-hover">
-    <thead>
-        <tr>
-            <th style="width: 10%;">Mã HĐ</th>
-            <th style="width: 15%;">Ngày tạo</th>
-            <th style="width: 15%;">Hình thức</th>
-            <th style="width: 20%;">Trạng thái đơn</th>
-            <th style="width: 20%;">Tổng tiền</th>
-            <th style="width: 20%;">Thao tác</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php if (!empty($payments)): ?>
-            <?php foreach ($payments as $payment): ?>
-                <tr>
-                    <td data-label="Mã HĐ"><?= $payment['Id'] ?></td>
-                    <td data-label="Ngày tạo"><?= date("d/m/Y H:i", strtotime($payment['CreatedAt'])) ?></td>
-                    
-                    <td data-label="Hình thức">
-                        <?php if (($payment['PaymentMethod'] ?? 'cod') == 'bank'): ?>
-                            <span class="badge bg-info text-dark"><i class="fas fa-university"></i> Ngân hàng</span>
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">Mã HĐ</th>
+                            <th style="width: 15%;">Ngày tạo</th>
+                            <th style="width: 15%;">Hình thức</th>
+                            <th style="width: 20%;">Trạng thái đơn</th>
+                            <th style="width: 20%;">Tổng tiền</th>
+                            <th style="width: 20%;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($payments)): ?>
+                            <?php foreach ($payments as $payment): ?>
+                                <tr>
+                                    <td data-label="Mã HĐ"><?= $payment['Id'] ?></td>
+                                    <td data-label="Ngày tạo"><?= date("d/m/Y H:i", strtotime($payment['CreatedAt'])) ?></td>
+                                    
+                                    <td data-label="Hình thức">
+                                        <?php if (($payment['PaymentMethod'] ?? 'cod') == 'bank'): ?>
+                                            <span class="badge bg-info text-dark"><i class="fas fa-university"></i> Ngân hàng</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-secondary"><i class="fas fa-truck"></i> Ship COD</span>
+                                        <?php endif; ?>
+                                    </td>
+
+                                    <td data-label="Trạng thái đơn">
+                                        <?php 
+                                            // Chuyển toàn bộ về chữ thường để dễ so sánh
+                                            $statusStr = mb_strtolower($payment['Status'] ?? 'pending', 'UTF-8');
+                                            
+                                            if ($statusStr == 'pending' || $statusStr == 'đang xử lý' || $statusStr == 'chờ thanh toán') {
+                                                echo '<span class="badge bg-warning text-dark"><i class="fas fa-spinner fa-spin"></i> Đang xử lý</span>';
+                                            } elseif ($statusStr == 'đang giao') {
+                                                echo '<span class="badge bg-primary"><i class="fas fa-motorcycle"></i> Đang giao hàng</span>';
+                                            } elseif ($statusStr == 'đã giao' || $statusStr == 'thành công' || $statusStr == 'paid') {
+                                                echo '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Đã giao thành công</span>';
+                                            } elseif ($statusStr == 'hủy' || $statusStr == 'cancelled' || $statusStr == 'đã hủy') {
+                                                echo '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> Đã hủy</span>';
+                                            } else {
+                                                echo '<span class="badge bg-secondary">' . htmlspecialchars(ucfirst($statusStr)) . '</span>';
+                                            }
+                                        ?>
+                                    </td>
+
+                                    <td data-label="Tổng tiền" class="total-amount"><?= number_format($payment['Total'], 0, ',', '.') ?> VND</td>
+                                    
+                                    <td data-label="Thao tác">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="detail.php?id=<?= $payment['Id'] ?>" class="btn btn-outline-info" title="Xem chi tiết" data-bs-toggle="tooltip">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+
+                                            <?php 
+                                                // LOGIC GIỚI HẠN 15 PHÚT HỦY ĐƠN
+                                                date_default_timezone_set('Asia/Ho_Chi_Minh');
+                                                $createdAt = strtotime($payment['CreatedAt']);
+                                                $now = time();
+                                                $diffMinutes = floor(($now - $createdAt) / 60);
+                                                
+                                                // Khách chỉ được hủy khi đơn vẫn đang nằm ở bước "đang xử lý" và chưa qua 15p
+                                                $canCancel = (($statusStr == 'pending' || $statusStr == 'đang xử lý' || $statusStr == 'chờ thanh toán') && $diffMinutes <= 15);
+                                            ?>
+
+                                           <?php if ($canCancel): ?>
+                                                <button class="btn btn-outline-danger delete-btn" data-id="<?= $payment['Id'] ?>" title="Hủy đơn hàng" data-bs-toggle="tooltip">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            <?php elseif ($statusStr == 'pending' || $statusStr == 'đang xử lý' || $statusStr == 'chờ thanh toán'): ?>
+                                                <button type="button" class="btn btn-outline-secondary" onclick="alert('Đã quá 15 phút kể từ lúc đặt.\nBạn không thể tự hủy đơn hàng này nữa!\n\nVui lòng liên hệ trực tiếp Hotline cửa hàng để được hỗ trợ.');" title="Không thể hủy" style="opacity: 0.65;">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
                         <?php else: ?>
-                            <span class="badge bg-secondary"><i class="fas fa-truck"></i> Ship COD</span>
+                            <tr><td colspan="6" class="text-center">Bạn chưa có hóa đơn nào.</td></tr>
                         <?php endif; ?>
-                    </td>
-
-                    <td data-label="Trạng thái đơn">
-                        <?php 
-                            // Chuyển toàn bộ về chữ thường để dễ so sánh
-                            $statusStr = mb_strtolower($payment['Status'] ?? 'pending', 'UTF-8');
-                            
-                            if ($statusStr == 'pending' || $statusStr == 'đang xử lý' || $statusStr == 'chờ thanh toán') {
-                                echo '<span class="badge bg-warning text-dark"><i class="fas fa-spinner fa-spin"></i> Đang xử lý</span>';
-                            } elseif ($statusStr == 'đang giao') {
-                                echo '<span class="badge bg-primary"><i class="fas fa-motorcycle"></i> Đang giao hàng</span>';
-                            } elseif ($statusStr == 'đã giao' || $statusStr == 'thành công' || $statusStr == 'paid') {
-                                echo '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Đã giao thành công</span>';
-                            } elseif ($statusStr == 'hủy' || $statusStr == 'cancelled' || $statusStr == 'đã hủy') {
-                                echo '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> Đã hủy</span>';
-                            } else {
-                                echo '<span class="badge bg-secondary">' . htmlspecialchars(ucfirst($statusStr)) . '</span>';
-                            }
-                        ?>
-                    </td>
-
-                    <td data-label="Tổng tiền" class="total-amount"><?= number_format($payment['Total'], 0, ',', '.') ?> VND</td>
-                    
-                    <td data-label="Thao tác">
-                        <div class="btn-group btn-group-sm" role="group">
-                            <a href="detail.php?id=<?= $payment['Id'] ?>" class="btn btn-outline-info" title="Xem chi tiết" data-bs-toggle="tooltip">
-                                <i class="fas fa-eye"></i>
-                            </a>
-
-                            <?php 
-                                // LOGIC GIỚI HẠN 15 PHÚT HỦY ĐƠN
-                                date_default_timezone_set('Asia/Ho_Chi_Minh');
-                                $createdAt = strtotime($payment['CreatedAt']);
-                                $now = time();
-                                $diffMinutes = floor(($now - $createdAt) / 60);
-                                
-                                // Khách chỉ được hủy khi đơn vẫn đang nằm ở bước "đang xử lý" và chưa qua 15p
-                                $canCancel = (($statusStr == 'pending' || $statusStr == 'đang xử lý' || $statusStr == 'chờ thanh toán') && $diffMinutes <= 15);
-                            ?>
-
-                           <?php if ($canCancel): ?>
-                                <button class="btn btn-outline-danger delete-btn" data-id="<?= $payment['Id'] ?>" title="Hủy đơn hàng" data-bs-toggle="tooltip">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            <?php elseif ($statusStr == 'pending' || $statusStr == 'đang xử lý' || $statusStr == 'chờ thanh toán'): ?>
-                                <button type="button" class="btn btn-outline-secondary" onclick="alert('Đã quá 15 phút kể từ lúc đặt.\nBạn không thể tự hủy đơn hàng này nữa!\n\nVui lòng liên hệ trực tiếp Hotline cửa hàng để được hỗ trợ.');" title="Không thể hủy" style="opacity: 0.65;">
-                                    <i class="fas fa-ban"></i>
-                                </button>
-                            <?php endif; ?>
-                        </div>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <tr><td colspan="6" class="text-center">Bạn chưa có hóa đơn nào.</td></tr>
-        <?php endif; ?>
-    </tbody>
-</table>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -211,6 +247,48 @@ $payments = $paymentController->getCustomerPayments($currentCustomerId);
                 });
             });
         });
+
+        // ============================================================
+        // LOGIC TẠO THÔNG BÁO DROPDOWN BANNER TỪ TRÊN XUỐNG
+        // ============================================================
+        function showTopBanner(messageHtml) {
+            const container = document.getElementById('top-banner-container');
+            const banner = document.createElement('div');
+            banner.className = 'custom-top-banner';
+            banner.innerHTML = messageHtml; // Đưa thông điệp vào banner
+            
+            container.appendChild(banner);
+
+            // Tự động thu hồi banner lên trên sau 4.5 giây
+            setTimeout(() => {
+                banner.style.animation = 'slideUp 0.5s ease-in forwards';
+                // Xóa hẳn thẻ div sau khi hiệu ứng slideUp chạy xong
+                setTimeout(() => banner.remove(), 500);
+            }, 4500);
+        }
+
+        function checkOrderUpdates() {
+            // JS sẽ hỏi file PHP (mỗi 10 giây)
+            fetch('check_order_updates.php')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.hasNew) {
+                        // Nếu admin có đổi trạng thái, vòng lặp mảng tin nhắn và in ra
+                        data.data.forEach(msg => {
+                            showTopBanner(msg);
+                        });
+                        
+                        // Đợi Banner thả xuống xong, load lại trang để bảng màu cập nhật theo
+                        setTimeout(() => {
+                            location.reload();
+                        }, 5000);
+                    }
+                })
+                .catch(err => console.error("Lỗi check thông báo: ", err));
+        }
+
+        
+        setInterval(checkOrderUpdates, 10000);
     </script>
 
     <?php include '../footer.php'; ?>
