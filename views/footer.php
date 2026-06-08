@@ -88,12 +88,7 @@
             <h3>LIÊN HỆ</h3>
             <p><i class="fas fa-phone-alt"></i> +84 123 456 789</p>
             <p><i class="fas fa-envelope"></i> contact@trungnguyencoffee.com</p>
-            <div class="footer-social">
-                <a href="#"><i class="fab fa-facebook-f"></i></a>
-                <a href="#"><i class="fab fa-instagram"></i></a>
-                <a href="#"><i class="fab fa-twitter"></i></a>
-                <a href="#"><i class="fab fa-youtube"></i></a>
-            </div>
+            
         </div>
     </div>
 

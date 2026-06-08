@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th4 18, 2026 lúc 07:06 AM
+-- Thời gian đã tạo: Th5 28, 2026 lúc 04:59 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -60,7 +60,10 @@ CREATE TABLE `cart_item` (
 --
 
 INSERT INTO `cart_item` (`Id`, `CartId`, `StoreProductId`, `Quantity`, `Price`) VALUES
-(3, 1, 87, 1, NULL);
+(3, 1, 87, 1, NULL),
+(15, 1, 86, 1, NULL),
+(20, 1, 40, 1, NULL),
+(23, 2, 142, 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -87,7 +90,29 @@ INSERT INTO `category` (`Id`, `Title`, `Content`, `CreateAt`, `UpdateAt`) VALUES
 (4, 'Sinh tố', 'Những ly sinh tố mịn màng...', '2025-11-17 14:52:54', '2025-11-17 14:52:54'),
 (5, 'Đồ ăn nhẹ', 'Những món ăn nhẹ đầy hấp dẫn...', '2025-11-17 14:52:54', '2025-11-17 14:52:54'),
 (6, 'Các món khác', 'Từ nước lọc, sữa tươi...', '2025-11-17 14:52:54', '2025-11-17 14:52:54'),
-(10, 'sữa đậu nahf', '312312', '2026-04-17 11:50:03', '2026-04-17 11:50:03');
+(12, 'Sửa đậu nành1', 'Thơm bổ béo1', '2026-05-15 08:23:24', '2026-05-27 09:08:54');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `contacts`
+--
+
+CREATE TABLE `contacts` (
+  `Id` int(11) NOT NULL,
+  `Name` varchar(100) NOT NULL,
+  `Email` varchar(100) NOT NULL,
+  `Message` text NOT NULL,
+  `StoreId` int(11) DEFAULT 0,
+  `CreatedAt` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `contacts`
+--
+
+INSERT INTO `contacts` (`Id`, `Name`, `Email`, `Message`, `StoreId`, `CreatedAt`) VALUES
+(1, 'Nguyễn Nhật Thành', 'thanh.nn.64cntt@ntu.edu.vn', 'tôi cần thông tin về sản phẩm', 1, '2026-05-28 09:30:52');
 
 -- --------------------------------------------------------
 
@@ -110,6 +135,7 @@ CREATE TABLE `customer` (
   `RandomKey` varchar(100) DEFAULT NULL,
   `IsActive` tinyint(1) DEFAULT 1,
   `Role` int(11) DEFAULT 0,
+  `StoreId` int(11) DEFAULT NULL,
   `ProvinceId` int(11) DEFAULT 0,
   `DistrictId` int(11) DEFAULT 0,
   `WardCode` varchar(10) DEFAULT ''
@@ -119,9 +145,10 @@ CREATE TABLE `customer` (
 -- Đang đổ dữ liệu cho bảng `customer`
 --
 
-INSERT INTO `customer` (`Id`, `FirstName`, `LastName`, `Address`, `Phone`, `Email`, `Img`, `RegisteredAt`, `UpdateAt`, `DateOfBirth`, `Password`, `RandomKey`, `IsActive`, `Role`, `ProvinceId`, `DistrictId`, `WardCode`) VALUES
-(1, 'Nhật Thành', 'Nguyễn', '05 Nguyễn Đình Chiểu Phường Bắc Nha Trang Tỉnh Khánh Hòa', '0866492106', 'thanh.nn.64cntt@ntu.edu.vn', 'avatar-default.png', '2026-04-15 09:06:12', '2026-04-17 10:05:21', '2004-05-13', '$2y$10$65Kznmf7S7j7QH2/YrmaAuFHcXug48sS5xWHSqFKOp4xcy9.obWvi', '', 1, 0, 0, 0, ''),
-(2, 'Văn A', 'Nguyễn', '123 Đường Láng, Đống Đa, Hà Nội', '0382395208', 'kinxedo78@gmail.com', 'avatar-default.png', '2026-04-15 09:21:26', NULL, '2003-11-11', '$2y$10$nkRRJXk5WoP5UheracXbEuj7S2DcHolqPFMdrBkfQeCJ/MEotjK0y', '', 1, 1, 0, 0, '');
+INSERT INTO `customer` (`Id`, `FirstName`, `LastName`, `Address`, `Phone`, `Email`, `Img`, `RegisteredAt`, `UpdateAt`, `DateOfBirth`, `Password`, `RandomKey`, `IsActive`, `Role`, `StoreId`, `ProvinceId`, `DistrictId`, `WardCode`) VALUES
+(1, 'Nhật Thành', 'Nguyễn', '05 Nguyễn Đình Chiểu Phường Bắc Nha Trang Tỉnh Khánh Hòa', '0866492106', 'thanh.nn.64cntt@ntu.edu.vn', 'avatar-default.png', '2026-04-15 09:06:12', '2026-05-15 07:51:11', '2004-05-13', '$2y$10$65Kznmf7S7j7QH2/YrmaAuFHcXug48sS5xWHSqFKOp4xcy9.obWvi', '', 1, 0, NULL, 0, 0, ''),
+(2, 'Văn A', 'Nguyễn', '820 Đường 2/4 Phường Vĩnh Phước Khánh Hóa', '0382395208', 'kinxedo78@gmail.com', 'avatar-default.png', '2026-04-15 09:21:26', '2026-05-12 15:04:56', '2003-11-11', '$2y$10$nkRRJXk5WoP5UheracXbEuj7S2DcHolqPFMdrBkfQeCJ/MEotjK0y', '', 1, 1, NULL, 0, 0, ''),
+(3, 'Hoàng Minh', 'Nguyễn', '02 Nguyễn Đình Chiểu Phường Bắc Nha Trang Tỉnh Khánh Hòa', '0901321445', 'nguyenvana@gmail.com', 'avatar-default.png', '2026-05-16 13:50:25', NULL, '2003-07-13', '$2y$10$8wAjx.Y1N5U7lD7XAk/DE.UsCpYTOx/DOO.vgRkDZjvrw8IiH2l12', '', 1, 2, 4, 0, 0, '');
 
 -- --------------------------------------------------------
 
@@ -237,10 +264,16 @@ INSERT INTO `payment` (`Id`, `CustomerId`, `StoreId`, `Total`, `PaymentMethod`, 
 (5, 1, 2, 25000.00, 'cod', NULL, NULL, 'hủy', '2026-04-15 20:05:05'),
 (7, 1, 3, 40000.00, 'bank', NULL, NULL, 'đang xử lý', '2026-04-16 09:31:40'),
 (8, 1, 2, 40000.00, 'bank', NULL, NULL, 'đang xử lý', '2026-04-16 11:20:44'),
-(9, 1, 2, 40501.00, 'cod', NULL, NULL, 'đang giao', '2026-04-17 10:09:08'),
+(9, 1, 2, 40501.00, 'cod', NULL, NULL, 'đã giao', '2026-04-17 10:09:08'),
 (10, 1, 3, 35501.00, 'bank', NULL, NULL, 'đã giao', '2026-04-17 10:14:53'),
 (11, 2, 5, 40501.00, 'cod', NULL, NULL, 'đang xử lý', '2026-04-18 11:32:52'),
-(12, 1, 4, 40501.00, 'cod', NULL, NULL, 'đang giao', '2026-04-18 11:39:06');
+(12, 1, 4, 40501.00, 'cod', NULL, NULL, 'đang giao', '2026-04-18 11:39:06'),
+(13, 1, 5, 40501.00, 'cod', NULL, NULL, 'đã giao', '2026-05-14 22:02:32'),
+(14, 1, 3, 40501.00, 'bank', NULL, NULL, 'đang giao', '2026-05-15 07:27:20'),
+(15, 1, 3, 40501.00, 'bank', NULL, NULL, 'đã giao', '2026-05-15 07:34:05'),
+(16, 1, 1, 45501.00, 'cod', NULL, NULL, 'đang giao', '2026-05-20 09:25:36'),
+(17, 1, 1, 40000.00, 'cod', NULL, NULL, 'đã giao', '2026-05-28 07:43:06'),
+(18, 1, 3, 45501.00, 'cod', NULL, NULL, 'đã giao', '2026-05-28 09:05:24');
 
 -- --------------------------------------------------------
 
@@ -270,7 +303,13 @@ INSERT INTO `paymentdetail` (`Id`, `PaymentId`, `StoreProductId`, `Price`, `Quan
 (9, 9, 66, 25000.00, 1),
 (10, 10, 86, 20000.00, 1),
 (11, 11, 133, 25000.00, 1),
-(12, 12, 111, 25000.00, 1);
+(12, 12, 111, 25000.00, 1),
+(13, 13, 133, 25000.00, 1),
+(14, 14, 89, 25000.00, 1),
+(15, 15, 89, 25000.00, 1),
+(16, 16, 40, 30000.00, 1),
+(17, 17, 45, 25000.00, 1),
+(18, 18, 84, 30000.00, 1);
 
 -- --------------------------------------------------------
 
@@ -300,26 +339,29 @@ INSERT INTO `product` (`Id`, `Title`, `Content`, `Img`, `Price`, `Weight`, `Rate
 (2, 'Trà đào cam sả', 'Trà đào cam sả thanh mát, mang đến sự kết hợp hài hòa giữa vị ngọt của đào, vị thanh của cam và mùi thơm nhẹ từ sả.', '30.-Tra-Dao-Cam-Sa.png', 30000.00, 500, 4.50, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 2),
 (3, 'Nước ép cam', 'Nước ép cam nguyên chất, cung cấp vitamin C dồi dào, giúp tăng cường sức đề kháng và giải khát tuyệt vời.', 'camvat.jpg', 25000.00, 500, 4.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 3),
 (4, 'Bánh mì nướng bơ', 'Bánh mì giòn tan, thấm đẫm bơ tỏi thơm lừng, một món ăn nhẹ lý tưởng để nhâm nhi cùng cà phê hoặc trà.', 'lam-banh-mi-nuong-bo-toi.jpg', 25000.00, 500, 4.70, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 5),
-(5, 'Bánh flan', 'Món bánh flan mềm mịn, ngọt nhẹ và thơm mùi caramel, là lựa chọn hoàn hảo cho những bữa ăn nhẹ hoặc tráng miệng.', 'Flan-trung.jpg', 10000.00, 500, 4.60, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 5),
+(5, 'Bánh flan', 'Món bánh flan mềm mịn, ngọt nhẹ và thơm mùi caramel, là lựa chọn hoàn hảo cho những bữa ăn nhẹ hoặc tráng miệng.', 'Flan-trung.jpg', 10000.00, 500, 4.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 5),
 (6, 'Cà phê đen nóng', 'Một ly cà phê đen nóng đậm vị, giữ trọn hương thơm nguyên bản, dành cho những ai yêu thích sự đơn giản mà tinh tế.', 'images-_1_ (1).jpg', 20000.00, 500, 4.40, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1),
 (7, 'Trà sữa trân châu đường đen', 'Trà sữa trân châu đường đen với vị béo ngọt hòa quyện, trân châu dai giòn, hương vị hấp dẫn không thể bỏ qua.', 'mua-nguyen-lieu-lam-tra-sua-tran-chau-duong-den-o-dau_20240527014654.jpg', 25000.00, 500, 4.50, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 2),
 (8, 'Nước ép dưa hấu', 'Nước ép dưa hấu tươi ngon, ngọt mát và giải nhiệt cho ngày hè oi bức.', 'Hình-App_3006021-Ép-Dưa-Hấu.jpg', 25000.00, 500, 4.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 3),
 (9, 'Sinh tố xoài', 'Sinh tố xoài ngọt lịm, đậm vị xoài chín.', 'sinh-to-xoai.jpg', 35000.00, 500, 4.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 4),
-(10, 'Bánh ngọt choco', 'Bánh ngọt chocolate mềm mịn, thơm ngon.', 'images-_2_ (1).jpg', 27000.00, 500, 4.70, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 5),
+(10, 'Bánh ngọt choco', 'Bánh ngọt chocolate mềm mịn, thơm ngon.', 'images-_2_ (1).jpg', 27000.00, 500, 3.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 5),
 (11, 'Espresso', 'Espresso đậm vị, phù hợp cho người yêu thích cà phê mạnh.', 'espresso-la-gi.jpg', 28000.00, 500, 4.50, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1),
 (12, 'Trà gừng', 'Trà gừng nóng ấm, tốt cho sức khỏe.', 'Trung-Nguyen_Tet1188-1x1-1-800x800.jpg', 30000.00, 500, 4.50, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 2),
 (13, 'Nước ép táo', 'Nước ép táo ngọt ngào, tốt cho sức khỏe và sắc đẹp.', 'cong-dung-cua-nuoc-ep-tao-va-thoi-diem-uong-nuoc-ep-tao-tot-nhat-nuoc_tao_1-1596696321-81-width800height500.jpg', 30000.00, 500, 4.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 3),
 (14, 'Sinh tố dâu tây', 'Sinh tố dâu tây chua ngọt, thơm ngon và bổ dưỡng.', 'sinh-to-dau-tay.jpg', 40000.00, 500, 4.50, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 4),
 (15, 'Snack khoai tây', 'Snack khoai tây giòn rụm, thích hợp cho các buổi trò chuyện.', 'orion-vi-ga-teriyaki-osaka-goi-lon-va-goi-nho-banh-keo-an-vat-imnuts-1_9ca3d29e67c34d26bc27b89f219abfde_master.jpg', 10000.00, 500, 4.60, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 5),
 (16, 'Sữa chua', 'Bổ sung dưỡng chất cho sức khỏe, làm da sáng trẻ đẹp', 'sua_chua_an_vinamilk_it_duong__hop_100gr__d4904f4a20c5499f8d7670b8c0ff0094.jpg', 20000.00, 500, 4.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 6),
-(17, 'Latte', 'Latte sữa béo, vị nhẹ nhàng dễ uống, phù hợp cho mọi người.', '24.-Picasso-Latte-2-_-No.png', 30000.00, 500, 4.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 3),
+(17, 'Latte', 'Latte sữa béo, vị nhẹ nhàng dễ uống, phù hợp cho mọi người.', '24.-Picasso-Latte-2-_-No.png', 30000.00, 500, 5.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 3),
 (18, 'Cappuccino', 'Cappuccino đậm đà, thơm ngon với lớp bọt sữa mịn màng.', 'istockphoto-505168330-612x612.jpg', 30000.00, 500, 5.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1),
 (19, 'Cà phê đá', 'Cà phê đá nguyên chất, thơm ngon, phù hợp cho những ai yêu thích vị cà phê đậm đà.', 'pngtree-iced-coffee-png-image_9237463.png', 20000.00, 500, 5.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1),
 (20, 'Cà phê sữa', 'Cà phê sữa ngọt dịu, kết hợp giữa vị cà phê và sữa đặc truyền thống.', 'images.jpg', 25000.00, 500, 5.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1),
 (21, 'Cà phê dừa', 'Cà phê kết hợp với nước cốt dừa béo ngậy, độc đáo và thơm ngon.', 'images-_2_.jpg', 25000.00, 500, 4.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1),
-(22, 'Cà phê trứng', 'Sở hữu kiểu dáng mạnh mẽ, gam màu sang trọng, âm thanh sống động, hiệu ứng đèn LED RGB đẹp mắt, kết nối không dây nhanh chóng mang đến cho bạn những trải nghiệm tuyệt vời.', 'images-_1_.jpg', 25000.00, 500, 4.00, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1),
+(22, 'Cà phê trứng', 'Sở hữu kiểu dáng mạnh mẽ, gam màu sang trọng, âm thanh sống động, hiệu ứng đèn LED RGB đẹp mắt, kết nối không dây nhanh chóng mang đến cho bạn những trải nghiệm tuyệt vời.', 'images-_1_.jpg', 25000.00, 500, 4.50, '2025-11-17 14:54:38', '2025-11-17 14:54:38', 1),
 (24, 'trà sữa', 'ádfasdfas', '69df8ed7a7835.png', 25000.00, 500, 0.00, '2026-04-15 20:12:55', NULL, 1),
-(26, 'cà phê đen', '123321', '69e1bb9fb6bd7.png', 1222221.00, 500, 0.00, '2026-04-17 11:48:31', NULL, 1);
+(26, 'cà phê đen', '12332', '69e1bb9fb6bd7.png', 1222.00, 500, NULL, '2026-04-17 11:48:31', '2026-05-21 11:24:18', 1),
+(27, 'Cà phê sửa béo', 'ngon bổ béo', '6a067df8472fd.png', 35000.00, 500, 0.00, '2026-05-15 08:59:20', NULL, 1),
+(28, 'cà phê trứng muối kem trứng', 'ngon', '6a067ec8b5cee.png', 50000.00, 500, 0.00, '2026-05-15 09:02:48', NULL, 1),
+(29, 'Sửa đậu nành', 'sữa béo', '6a144206d3c51.png', 30000.00, 500, NULL, '2026-05-25 19:35:18', '2026-05-25 19:42:50', 2);
 
 -- --------------------------------------------------------
 
@@ -333,15 +375,21 @@ CREATE TABLE `productreview` (
   `CustomerId` int(11) NOT NULL,
   `Rating` int(11) DEFAULT NULL,
   `Comment` varchar(500) DEFAULT NULL,
-  `CreatedAt` datetime DEFAULT current_timestamp()
+  `CreatedAt` datetime DEFAULT current_timestamp(),
+  `AiSentiment` varchar(20) DEFAULT 'TRUNG_TINH'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `productreview`
 --
 
-INSERT INTO `productreview` (`Id`, `StoreProductId`, `CustomerId`, `Rating`, `Comment`, `CreatedAt`) VALUES
-(26, 84, 2, 4, 'đâsdwdadas', '2026-04-15 09:51:33');
+INSERT INTO `productreview` (`Id`, `StoreProductId`, `CustomerId`, `Rating`, `Comment`, `CreatedAt`, `AiSentiment`) VALUES
+(27, 89, 3, 4, 'Sản phẩm chất lượng tốt', '2026-05-16 13:50:50', 'TRUNG_TINH'),
+(28, 77, 3, 3, 'Rất ngọt không được ngon', '2026-05-16 13:51:38', 'TRUNG_TINH'),
+(29, 84, 1, 5, 'Ngon béo nóng hổi', '2026-05-16 13:52:10', 'TRUNG_TINH'),
+(30, 42, 2, 5, 'cà phê đậm vị, thơm ngon', '2026-05-16 13:52:56', 'TRUNG_TINH'),
+(31, 28, 2, 4, 'Bánh mềm độ ngọt vừa phải', '2026-05-16 13:53:06', 'TRUNG_TINH'),
+(32, 89, 1, 5, 'dở, không ngon xíu nào hết', '2026-05-28 09:54:20', 'TRUNG_TINH');
 
 -- --------------------------------------------------------
 
@@ -365,7 +413,11 @@ INSERT INTO `revenue` (`Id`, `StoreId`, `Month`, `Year`, `Total`) VALUES
 (1, 5, 4, 2026, 40501.00),
 (2, 4, 4, 2026, 40501.00),
 (3, 2, 4, 2026, 25000.00),
-(4, 3, 4, 2026, 55501.00);
+(4, 3, 4, 2026, 55501.00),
+(6, 5, 5, 2026, 40501.00),
+(7, 2, 5, 2026, 40501.00),
+(8, 3, 5, 2026, 177004.00),
+(9, 1, 5, 2026, 40000.00);
 
 -- --------------------------------------------------------
 
@@ -398,7 +450,13 @@ INSERT INTO `shipment` (`Id`, `PaymentId`, `Carrier`, `TrackingCode`, `Status`, 
 (9, 9, 'DEMO', 'DEMO1776395348', 'ready_to_pick', NULL, NULL, '2026-04-17 10:09:08'),
 (10, 10, 'DEMO', 'DEMO1776395693', 'ready_to_pick', NULL, NULL, '2026-04-17 10:14:53'),
 (11, 11, 'DEMO', 'DEMO1776486772', 'ready_to_pick', NULL, NULL, '2026-04-18 11:32:52'),
-(12, 12, 'DEMO', 'DEMO1776487146', 'ready_to_pick', NULL, NULL, '2026-04-18 11:39:06');
+(12, 12, 'DEMO', 'DEMO1776487146', 'ready_to_pick', NULL, NULL, '2026-04-18 11:39:06'),
+(13, 13, 'DEMO', 'DEMO1778770952', 'ready_to_pick', NULL, NULL, '2026-05-14 22:02:32'),
+(14, 14, 'DEMO', 'DEMO1778804840', 'ready_to_pick', NULL, NULL, '2026-05-15 07:27:20'),
+(15, 15, 'DEMO', 'DEMO1778805245', 'ready_to_pick', NULL, NULL, '2026-05-15 07:34:05'),
+(16, 16, 'DEMO', 'DEMO1779243936', 'ready_to_pick', NULL, NULL, '2026-05-20 09:25:36'),
+(17, 17, 'DEMO', 'DEMO1779928986', 'ready_to_pick', NULL, NULL, '2026-05-28 07:43:06'),
+(18, 18, 'DEMO', 'DEMO1779933924', 'ready_to_pick', NULL, NULL, '2026-05-28 09:05:24');
 
 -- --------------------------------------------------------
 
@@ -558,9 +616,11 @@ INSERT INTO `storeproduct` (`Id`, `StoreId`, `ProductId`, `IsAvailable`, `Discou
 (132, 5, 21, 0, 0),
 (133, 5, 22, 1, 0),
 (136, 5, 24, 1, 0),
-(139, 5, 26, 1, 0),
-(140, 4, 26, 1, 0),
-(141, 2, 26, 1, 0);
+(142, 2, 27, 1, 0),
+(143, 4, 28, 1, 0),
+(144, 2, 28, 1, 0),
+(147, 5, 26, 1, 0),
+(151, 3, 29, 1, 0);
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -588,6 +648,12 @@ ALTER TABLE `category`
   ADD PRIMARY KEY (`Id`);
 
 --
+-- Chỉ mục cho bảng `contacts`
+--
+ALTER TABLE `contacts`
+  ADD PRIMARY KEY (`Id`);
+
+--
 -- Chỉ mục cho bảng `customer`
 --
 ALTER TABLE `customer`
@@ -595,7 +661,8 @@ ALTER TABLE `customer`
   ADD UNIQUE KEY `unique_email` (`Email`),
   ADD UNIQUE KEY `unq_email` (`Email`),
   ADD UNIQUE KEY `unique_phone` (`Phone`),
-  ADD UNIQUE KEY `unq_phone` (`Phone`);
+  ADD UNIQUE KEY `unq_phone` (`Phone`),
+  ADD KEY `fk_customer_store` (`StoreId`);
 
 --
 -- Chỉ mục cho bảng `employee`
@@ -695,19 +762,25 @@ ALTER TABLE `cart`
 -- AUTO_INCREMENT cho bảng `cart_item`
 --
 ALTER TABLE `cart_item`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT cho bảng `category`
 --
 ALTER TABLE `category`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT cho bảng `contacts`
+--
+ALTER TABLE `contacts`
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT cho bảng `customer`
 --
 ALTER TABLE `customer`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `employee`
@@ -731,37 +804,37 @@ ALTER TABLE `page`
 -- AUTO_INCREMENT cho bảng `payment`
 --
 ALTER TABLE `payment`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT cho bảng `paymentdetail`
 --
 ALTER TABLE `paymentdetail`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT cho bảng `product`
 --
 ALTER TABLE `product`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT cho bảng `productreview`
 --
 ALTER TABLE `productreview`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT cho bảng `revenue`
 --
 ALTER TABLE `revenue`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT cho bảng `shipment`
 --
 ALTER TABLE `shipment`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT cho bảng `store`
@@ -773,7 +846,7 @@ ALTER TABLE `store`
 -- AUTO_INCREMENT cho bảng `storeproduct`
 --
 ALTER TABLE `storeproduct`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=142;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=152;
 
 --
 -- Các ràng buộc cho các bảng đã đổ
@@ -791,6 +864,12 @@ ALTER TABLE `cart`
 ALTER TABLE `cart_item`
   ADD CONSTRAINT `fk_cartitem_cart` FOREIGN KEY (`CartId`) REFERENCES `cart` (`Id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_cartitem_storeproduct` FOREIGN KEY (`StoreProductId`) REFERENCES `storeproduct` (`Id`) ON DELETE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `customer`
+--
+ALTER TABLE `customer`
+  ADD CONSTRAINT `fk_customer_store` FOREIGN KEY (`StoreId`) REFERENCES `store` (`Id`) ON DELETE SET NULL;
 
 --
 -- Các ràng buộc cho bảng `employee`
