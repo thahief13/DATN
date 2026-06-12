@@ -7,7 +7,7 @@ if (!isset($_SESSION['CustomerId'])) {
     exit();
 }
 
-// Gọi file kết nối và controller (giống hệt file index.php của bạn)
+// Gọi file kết nối và controller 
 require_once '../../env.php'; 
 require_once '../../controllers/CustomerPaymentController.php';
 
@@ -17,7 +17,7 @@ $currentOrders = $paymentController->getCustomerPayments($customerId);
 
 $notifications = [];
 
-// 1. Nếu chưa có Session theo dõi, khởi tạo và ghi nhớ trạng thái hiện tại rồi thoát
+// Nếu chưa có Session theo dõi, khởi tạo và ghi nhớ trạng thái hiện tại rồi thoát
 if (!isset($_SESSION['tracked_orders'])) {
     $_SESSION['tracked_orders'] = [];
     foreach ($currentOrders as $order) {

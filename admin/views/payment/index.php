@@ -332,6 +332,96 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
             populateStoreFilter();
             renderPayments(allPayments);
         }, 50);
+        
     </script>
+    <div id="adminToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px;"></div>
+
+<style>
+    .admin-toast {
+        background-color: #fff;
+        color: #333;
+        border-left: 5px solid #0dcaf0; 
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        width: 330px;
+        transform: translateX(120%);
+        transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.4s ease;
+        opacity: 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .admin-toast.show { transform: translateX(0); opacity: 1; }
+    .admin-toast i { font-size: 24px; margin-top: 2px; }
+    
+    .admin-toast.canceled { border-left-color: #dc3545; }
+    .admin-toast.canceled i { color: #dc3545; }
+    
+    .admin-toast.new { border-left-color: #198754; }
+    .admin-toast.new i { color: #198754; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ĐƯỜNG DẪN TUYỆT ĐỐI KHÔNG BAO GIỜ BỊ LỖI
+    const adminCheckUrl = 'http://<?php echo $_SERVER["HTTP_HOST"]; ?>/app/admin/views/check_new_orders.php';
+
+    function fetchAdminOrders() {
+        fetch(adminCheckUrl) 
+        .then(response => response.json())
+        .then(data => {
+            // Hiển thị lỗi ra Console nếu bị sai quyền hoặc sai đường dẫn
+            if (!data.success && data.message) {
+                console.warn('Cảnh báo từ radar Admin:', data.message);
+                return;
+            }
+
+            if (data.success && data.data && data.data.length > 0) {
+                data.data.forEach(noti => {
+                    showAdminNotification(noti.Message, noti.Type);
+                });
+                
+                // Tự động load lại bảng để Admin thấy đơn mới
+                setTimeout(() => location.reload(), 3000); 
+            }
+        })
+        .catch(err => console.log('Radar Admin đang chạy ngầm...'));
+    }
+
+    // Chạy ngay lập tức khi Admin vừa vào trang
+    fetchAdminOrders();
+
+    // Quét liên tục mỗi 4 giây
+    setInterval(fetchAdminOrders, 4000); 
+
+    function showAdminNotification(message, type) {
+        const container = document.getElementById('adminToastContainer');
+        if (!container) return; 
+
+        const toast = document.createElement('div');
+        toast.className = `admin-toast ${type}`;
+        
+        let iconClass = type === 'cancel' ? 'fa-ban' : 'fa-shopping-bag';
+        let title = type === 'cancel' ? 'Cảnh báo Hủy Đơn' : 'Ting Ting! Đơn hàng mới';
+
+        toast.innerHTML = `
+            <i class="fas ${iconClass}"></i>
+            <div>
+                <strong style="font-size: 15px;">${title}</strong>
+                <p style="margin: 5px 0 0; font-size: 14px; color: #555;">${message}</p>
+            </div>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 100);
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 500); 
+        }, 7000); 
+    }
+});
+</script>
 </body>
 </html>

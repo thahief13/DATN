@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
     
-    if ($controller->deleteCategory($categoryId)) {
+    if ($controller->updateCategory($categoryId)) {
         $_SESSION['success_message'] = 'Xóa danh mục thành công';
     } else {
         $_SESSION['error_message'] = 'Lỗi xóa danh mục (có thể đang được sử dụng)';

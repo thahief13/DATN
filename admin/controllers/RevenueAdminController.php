@@ -9,7 +9,7 @@ class RevenueAdminController {
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
         $db->set_charset("utf8mb4");
 
-        // --- BẮT ĐẦU: TỰ ĐỘNG ĐỌC QUYỀN TỪ DATABASE ---
+        // phân quyền
         $customerId = $_SESSION['CustomerId'] ?? 0;
         $sqlUser = "SELECT Role, StoreId FROM customer WHERE Id = " . (int)$customerId;
         $resUser = $db->query($sqlUser);

@@ -31,7 +31,7 @@ $stmt->execute();
 $res = $stmt->get_result();
 
 if ($res->num_rows === 0) {
-    echo json_encode(['success' => false, 'message' => 'Không tìm thấy đơn hàng hoặc không có quyền xóa']);
+    echo json_encode(['success' => false, 'message' => 'Không tìm thấy đơn hàng hoặc không có quyền thao tác']);
     $stmt->close();
     $conn->close();
     exit();
@@ -57,35 +57,27 @@ if ($diffMinutes > 15) {
     exit();
 }
 
-
 $conn->begin_transaction();
 
 try {
-    
-    $stmtShip = $conn->prepare("DELETE FROM shipment WHERE PaymentId = ?");
+    // 1. Cập nhật bảng Giao hàng thành Hủy
+    $stmtShip = $conn->prepare("UPDATE shipment SET Status = 'hủy' WHERE PaymentId = ?");
     $stmtShip->bind_param("i", $paymentId);
     $stmtShip->execute();
     $stmtShip->close();
 
-    
-    $stmtDetail = $conn->prepare("DELETE FROM paymentdetail WHERE PaymentId = ?");
-    $stmtDetail->bind_param("i", $paymentId);
-    $stmtDetail->execute();
-    $stmtDetail->close();
-
-    
-    $stmtPay = $conn->prepare("DELETE FROM payment WHERE Id = ?");
+ 
+    $stmtPay = $conn->prepare("UPDATE payment SET Status = 'hủy' WHERE Id = ?");
     $stmtPay->bind_param("i", $paymentId);
     $stmtPay->execute();
     $stmtPay->close();
 
-    
     $conn->commit();
     echo json_encode(['success' => true, 'message' => 'Đã hủy đơn hàng thành công!']);
 
 } catch (Exception $e) {
     $conn->rollback();
-    echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống khi xóa: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống khi hủy: ' . $e->getMessage()]);
 }
 
 $conn->close();

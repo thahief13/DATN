@@ -30,7 +30,7 @@ $productAdminController = new ProductAdminController();
 $allProductAdmins = $productAdminController->getAllProducts(0, $selectedStore, $searchKeyword);
 $stores = $productAdminController->getAllStores();
 
-// Pagination
+// phân trang
 $itemsPerPage = 15;
 $currentPage = isset($_GET['product_page']) ? (int)$_GET['product_page'] : 1;
 if ($currentPage < 1) $currentPage = 1;

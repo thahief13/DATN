@@ -2,6 +2,7 @@
 session_start();
 if (isset($_SESSION['vnp_PaymentId'])) {
     require_once '../../env.php';
+    global $hostname, $username, $password, $dbname;
     $db = new mysqli($hostname, $username, $password, $dbname, $port);
     if ($db->connect_error) {
         die('DB Error');

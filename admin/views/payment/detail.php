@@ -23,7 +23,7 @@ if (!$paymentInfo) {
     die('<div style="color:red; text-align:center; margin-top:50px;"><h3>Không tìm thấy thông tin đơn hàng này trong hệ thống!</h3></div>');
 }
 
-// Biến cờ: Kiểm tra xem có sản phẩm nào trong đơn bị hết hàng không
+// Biến cờ: Kiểm tra xem có sản phẩm nào trong đơn bị hết hàng hoặc không đủ tồn kho không
 $canFulfill = true; 
 ?>
 <!DOCTYPE html>
@@ -62,6 +62,8 @@ $canFulfill = true;
                                     } elseif ($status === 'chờ thanh toán') {
                                         $badgeClass = 'warning';
                                         $displayStatus = 'CHỜ THANH TOÁN';
+                                    } elseif ($status === 'đang giao') {
+                                        $badgeClass = 'info text-dark';
                                     } elseif ($status === 'đã giao' || $status === 'thành công') {
                                         $badgeClass = 'success';
                                     } elseif ($status === 'hủy' || $status === 'đã hủy') {
@@ -78,7 +80,7 @@ $canFulfill = true;
                     <div class="card-body p-0">
                         <div class="row g-0">
                             <div class="col-md-6 p-4 border-end">
-                                <h5><i class="fas fa-user text-primary me-2"></i>Thông vị khách hàng</h5>
+                                <h5><i class="fas fa-user text-primary me-2"></i>Thông tin khách hàng</h5>
                                 <p class="mb-1"><strong>Tên:</strong> <?php echo htmlspecialchars($paymentInfo->CustomerName ?? 'N/A'); ?></p>
                                 <p class="mb-1"><strong>SĐT:</strong> <?php echo htmlspecialchars($paymentInfo->CustomerPhone ?? 'N/A'); ?></p>
                                 <p class="mb-0"><strong>Địa chỉ:</strong> <?php echo htmlspecialchars($paymentInfo->CustomerAddress ?? 'N/A'); ?></p>
@@ -99,14 +101,17 @@ $canFulfill = true;
                                 <?php if(count($paymentDetails) > 0): ?>
                                     <?php foreach ($paymentDetails as $detail): ?>
                                     <?php 
-                                        // Kiểm tra món này cửa hàng còn không
+                                        // Kiểm tra món này cửa hàng còn không VÀ Tồn kho có đủ không
                                         $isAvailable = isset($detail['IsAvailable']) ? (int)$detail['IsAvailable'] : 1;
-                                        if ($isAvailable === 0) {
+                                        $stock = isset($detail['Stock']) ? (int)$detail['Stock'] : 0;
+                                        $orderQty = intval($detail['OrderQty'] ?? 0);
+                                        
+                                        if ($isAvailable === 0 || $stock < $orderQty) {
                                             $canFulfill = false; 
                                         }
                                     ?>
                                     <div class="col-md-6 col-lg-4">
-                                        <div class="card h-100 shadow-sm <?php echo ($isAvailable === 0) ? 'border-danger bg-danger-subtle' : ''; ?>">
+                                        <div class="card h-100 shadow-sm <?php echo ($isAvailable === 0 || $stock < $orderQty) ? 'border-danger bg-danger-subtle' : ''; ?>">
                                             <div class="card-body">
                                                 <div class="row align-items-center">
                                                     <div class="col-4">
@@ -115,20 +120,22 @@ $canFulfill = true;
                                                     </div>
                                                     <div class="col-8">
                                                         <h6 class="mb-1"><?php echo htmlspecialchars($detail['Title'] ?? 'Tên sản phẩm trống'); ?></h6>
-                                                        <p class="small text-dark fw-bold mb-1">Yêu cầu: <?php echo intval($detail['OrderQty'] ?? 0); ?> ly</p>
+                                                        <p class="small text-dark fw-bold mb-1">Khách đặt: <?php echo $orderQty; ?> ly</p>
+                                                        <p class="small text-primary fw-bold mb-1">Kho hiện có: <?php echo $stock; ?> ly</p>
                                                         
-                                                        <?php if ($isAvailable === 1): ?>
-                                                            <span class="badge bg-success mb-2">Cửa hàng: Còn món</span>
+                                                        <?php if ($isAvailable === 0): ?>
+                                                            <span class="badge bg-danger mb-2">Cửa hàng: NGỪNG BÁN</span>
+                                                        <?php elseif ($stock < $orderQty): ?>
+                                                            <span class="badge bg-danger mb-2">Cửa hàng: THIẾU HÀNG</span>
                                                         <?php else: ?>
-                                                            <span class="badge bg-danger mb-2">Cửa hàng: HẾT MÓN</span>
+                                                            <span class="badge bg-success mb-2">Cửa hàng: Đủ hàng</span>
                                                         <?php endif; ?>
 
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <span class="fw-bold text-success">
                                                                 <?php 
                                                                     $price = floatval($detail['Price'] ?? 0);
-                                                                    $qty = intval($detail['OrderQty'] ?? 0);
-                                                                    echo number_format($price * $qty, 0, ',', '.'); 
+                                                                    echo number_format($price * $orderQty, 0, ',', '.'); 
                                                                 ?> ₫
                                                             </span>
                                                         </div>
@@ -147,7 +154,7 @@ $canFulfill = true;
 
                             <?php if (!$canFulfill && $status === 'đang xử lý'): ?>
                                 <div class="alert alert-danger mt-4 text-center">
-                                    <i class="fas fa-exclamation-triangle"></i> <strong>CẢNH BÁO:</strong> Có sản phẩm trong đơn hàng hiện đang <strong>HẾT MÓN</strong> tại chi nhánh này. Vui lòng liên hệ khách hoặc Hủy đơn!
+                                    <i class="fas fa-exclamation-triangle"></i> <strong>CẢNH BÁO:</strong> Có sản phẩm trong đơn hàng hiện đang <strong>KHÔNG ĐỦ SỐ LƯỢNG</strong> tại chi nhánh này. Vui lòng liên hệ khách hoặc Hủy đơn!
                                 </div>
                             <?php endif; ?>
                         </div>

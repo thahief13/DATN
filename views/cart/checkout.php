@@ -6,6 +6,8 @@ require_once '../../controllers/CartController.php';
 require_once '../../controllers/ProductController.php';
 require_once '../../controllers/CustomerController.php';
 require_once '../../controllers/StoreController.php';
+// Gọi Controller mới
+require_once '../../controllers/CheckoutController.php'; 
 
 if (!isset($_SESSION['CustomerId'])) {
     header("Location: ../customer/sign_in.php");
@@ -33,6 +35,11 @@ $productController = new ProductController();
 $customerController = new CustomerController();
 $storeController = new StoreController();
 
+global $hostname, $username, $password, $dbname, $port;
+$conn = new mysqli($hostname, $username, $password, $dbname, $port);
+$conn->set_charset("utf8mb4");
+$checkoutController = new CheckoutController($conn);
+
 $storeCarts = $cartController->getCartByCustomerId($customerId, $storeId);
 
 $selectedIdsStr = $_GET['selectedProducts'] ?? '';
@@ -59,38 +66,19 @@ $storePhone = preg_replace('/\D/', '', $store->Phone ?? '');
 $storeDistrict = (int)($store->DistrictId ?? 1548); 
 $storeWard = trim((string)($store->WardCode ?? '410110')); 
 
+// -------------------------------------------------------------------------------------
+// GỌI HÀM XỬ LÝ LOGIC TỪ CONTROLLER (MVC CHUẨN)
+// -------------------------------------------------------------------------------------
 $ghn_error = '';
-$storeTotal = 0;
-$totalWeight = 0;
-global $hostname, $username, $password, $dbname;
+$summaryData = $checkoutController->calculateOrderSummary($storeCarts, $storeId);
 
-$dbTemp = new mysqli($hostname, $username, $password, $dbname, $port);
-
-foreach ($storeCarts as $cart) {
-    $product = $productController->getProductById($cart->ProductId);
-    
-    $discount = 0;
-    $resSP = $dbTemp->query("SELECT DiscountPercent FROM storeproduct WHERE ProductId = " . (int)$cart->ProductId . " AND StoreId = " . (int)$storeId);
-    if ($resSP && $rowSP = $resSP->fetch_assoc()) {
-        $discount = (int)$rowSP['DiscountPercent'];
-    }
-    
-    $basePrice = (int)($product->Price ?? 0);
-    $finalPrice = (int)($basePrice * (1 - $discount / 100));
-    
-    $weight = (int)($product->Weight ?? 500);
-    if ($weight <= 0) $weight = 500;
-
-    $storeTotal += $finalPrice * $cart->Quantity;
-    $totalWeight += $weight * $cart->Quantity;
-}
-$dbTemp->close();
+$storeTotal = $summaryData['storeTotal'];
+$totalWeight = $summaryData['totalWeight'];
+$orderItems = $summaryData['items']; 
+$conn->close(); // Đóng kết nối tại đây
 
 if ($storeTotal <= 0) die('<div class="alert alert-danger text-center">Tổng giá trị đơn hàng không hợp lệ!</div>');
 
-// ==========================================
-// TÍCH HỢP API GIAO HÀNG NHANH (GHN) - ĐÃ CẬP NHẬT
-// ==========================================
 define('GHN_TOKEN', 'ee236453-32f7-11f1-83ac-625f4e0bad60'); 
 define('GHN_SHOP_ID', 6372158); 
 
@@ -98,14 +86,13 @@ $storeShippingFee = 15000;
 $storeLeadtime = date('H:i d/m/Y', strtotime('+30 minutes'));
 $ghn_error = '';
 
-// BƯỚC CỨU HỘ ĐỊA CHỈ: Nếu DB của khách chưa có Mã Quận/Phường (bằng 0), tự động gán về Trung tâm Nha Trang để API chạy được!
 if ($toDistrict <= 0 || empty($toWard)) {
     $toDistrict = 1548;   // Mã TP Nha Trang trên GHN
     $toWard = '410110';   // Mã Phường Lộc Thọ trên GHN
     $ghn_error = '';
 }
 
-// 1. GỌI API TÍNH PHÍ VẬN CHUYỂN (/fee)
+//  GỌI API TÍNH PHÍ VẬN CHUYỂN (/fee)
 $feePayload = [
     "service_type_id" => 2,
     "from_district_id" => $storeDistrict,
@@ -131,11 +118,10 @@ curl_close($chFee);
 if (isset($resFee['code']) && $resFee['code'] == 200) {
     $storeShippingFee = $resFee['data']['total'] ?? 15000;
 } else {
-    // In lỗi chi tiết của GHN ra màn hình để dễ Debug
     $ghn_error .= '<div class="alert alert-danger text-center mb-2">Lỗi tính phí GHN: ' . htmlspecialchars($resFee['message'] ?? 'Thất bại') . '</div>';
 }
 
-// 2. GỌI API TÍNH THỜI GIAN GIAO HÀNG (/leadtime)
+// GỌI API TÍNH THỜI GIAN GIAO HÀNG (/leadtime)
 $timePayload = [
     "from_district_id" => $storeDistrict,
     "from_ward_code" => $storeWard,
@@ -201,16 +187,12 @@ $grandTotal = $storeTotal + $storeShippingFee;
                 </thead>
                 <tbody>
                     <?php 
-                    $dbTemp = new mysqli($hostname, $username, $password, $dbname, $port);
-                    foreach ($storeCarts as $cart):
-                        $product = $productController->getProductById($cart->ProductId);
-                        $discount = 0;
-                        $resSP = $dbTemp->query("SELECT DiscountPercent FROM storeproduct WHERE ProductId = " . (int)$cart->ProductId . " AND StoreId = " . (int)$storeId);
-                        if ($resSP && $rowSP = $resSP->fetch_assoc()) $discount = (int)$rowSP['DiscountPercent'];
-                        
-                        $basePrice = $product->Price;
-                        $finalPrice = $basePrice * (1 - $discount / 100);
-                        $subtotal = $finalPrice * $cart->Quantity;
+                    // VIEW CHỈ LÀM NHIỆM VỤ HIỂN THỊ, KHÔNG CẦN GỌI DATABASE NỮA
+                    foreach ($orderItems as $item):
+                        $product = $item['product'];
+                        $finalPrice = $item['finalPrice'];
+                        $subtotal = $item['subtotal'];
+                        $quantity = $item['cart']->Quantity;
                     ?>
                         <tr>
                             <td style="padding: 15px;">
@@ -222,10 +204,10 @@ $grandTotal = $storeTotal + $storeShippingFee;
                             </td>
                             <td style="font-weight: 500; text-align: left; padding-left: 20px;"><?= htmlspecialchars($product->Title) ?></td>
                             <td><?= number_format($finalPrice, 0, ',', '.') ?> VNĐ</td>
-                            <td><span style="background: #f8f9fa; padding: 5px 15px; border-radius: 20px; font-weight: bold; border: 1px solid #ddd;"><?= $cart->Quantity ?></span></td>
+                            <td><span style="background: #f8f9fa; padding: 5px 15px; border-radius: 20px; font-weight: bold; border: 1px solid #ddd;"><?= $quantity ?></span></td>
                             <td style="font-weight:bold; color:#ffb300;"><?= number_format($subtotal, 0, ',', '.') ?> VNĐ</td>
                         </tr>
-                    <?php endforeach; $dbTemp->close(); ?>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>

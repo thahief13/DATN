@@ -2,7 +2,7 @@
 session_start();
 require_once '../../env.php';
 require_once '../../controllers/CheckoutController.php';
-
+global $hostname, $username, $password, $dbname;
 $conn = new mysqli($hostname, $username, $password, $dbname);
 if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
 
@@ -24,8 +24,6 @@ $result = $checkout->processOrder($customerId, $storeId, $paymentMethod, true, $
     
     // Sau khi đặt hàng thành công thì xóa session này đi
     unset($_SESSION['SelectedProductIds']);
-
-
 
 
 

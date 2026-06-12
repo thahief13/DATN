@@ -9,14 +9,13 @@ if (!class_exists('CustomerController')) {
 
         public function __construct($connection = null)
         {
-            // Ép buộc nạp file cấu hình ngay tại đây để tránh lỗi mất biến global
             require __DIR__ . '/../env.php'; 
             
             // Khởi tạo kết nối trực tiếp bằng các biến từ env.php
             if ($connection) {
                 $this->conn = $connection;
             } else {
-                // Sử dụng biến cục bộ vừa được require từ env.php
+             
                 $this->conn = new mysqli($hostname, $username, $password, $dbname, $port);
             }
 
@@ -144,7 +143,7 @@ if (!class_exists('CustomerController')) {
                     WHERE Id = ?";
             $stmt = $db->prepare($sql);
             
-            // Sử dụng biến tạm
+            // Sử dụng biến tạm hash mật khẩu
             $pass = $customer->Password;
             $id = $customer->Id;
 

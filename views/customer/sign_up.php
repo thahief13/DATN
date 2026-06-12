@@ -8,7 +8,7 @@
     $email = $_POST['Email'] ?? '';
     $phone = $_POST['Phone'] ?? '';
     $address = $_POST['Address'] ?? '';
-    $dateOfBirth = $_POST['DateOfBirth'] ?? ''; // Đã thêm biến này
+    $dateOfBirth = $_POST['DateOfBirth'] ?? ''; 
     
     $UPLOAD_DIR = '../../img/KhachHang/';
 
@@ -54,7 +54,7 @@
         $customer->Email = trim($email);
         $customer->Phone = trim($phone);
         $customer->Address = $address;
-        $customer->DateOfBirth = $dateOfBirth; // Gán dữ liệu thay vì 0000-00-00
+        $customer->DateOfBirth = $dateOfBirth; 
         
         // Gán giá trị mặc định để tránh lỗi SQL hoặc lỗi bind_param
         $customer->ProvinceId = 0; 

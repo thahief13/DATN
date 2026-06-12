@@ -34,7 +34,7 @@ class PaymentController
         $payment = $res->fetch_assoc();
         $stmt->close();
 
-        // 2. Lấy chi tiết sản phẩm 
+        //Lấy chi tiết sản phẩm 
         $sqlDetail = "SELECT pd.*, sp.ProductId, p.Title, p.Img 
                       FROM paymentdetail pd
                       JOIN storeproduct sp ON pd.StoreProductId = sp.Id

@@ -22,6 +22,54 @@ class CheckoutController
         $this->customerController = new CustomerController();
     }
 
+    public function calculateOrderSummary($storeCarts, $storeId)
+    {
+        $storeTotal = 0;
+        $totalWeight = 0;
+        $items = []; // Mảng chứa chi tiết từng sản phẩm để in ra giao diện
+
+        $stmtDiscount = $this->conn->prepare("SELECT DiscountPercent FROM storeproduct WHERE ProductId = ? AND StoreId = ?");
+
+        foreach ($storeCarts as $cart) {
+            $product = $this->productController->getProductById($cart->ProductId);
+            
+            $discount = 0;
+            $stmtDiscount->bind_param("ii", $cart->ProductId, $storeId);
+            $stmtDiscount->execute();
+            $resSP = $stmtDiscount->get_result();
+            if ($rowSP = $resSP->fetch_assoc()) {
+                $discount = (int)$rowSP['DiscountPercent'];
+            }
+            
+            $basePrice = (int)($product->Price ?? 0);
+            $finalPrice = (int)($basePrice * (1 - $discount / 100));
+            
+            $weight = (int)($product->Weight ?? 500);
+            if ($weight <= 0) $weight = 500;
+
+            $subtotal = $finalPrice * $cart->Quantity;
+
+            $storeTotal += $subtotal;
+            $totalWeight += $weight * $cart->Quantity;
+
+            $items[] = [
+                'cart' => $cart,
+                'product' => $product,
+                'discount' => $discount,
+                'basePrice' => $basePrice,
+                'finalPrice' => $finalPrice,
+                'subtotal' => $subtotal
+            ];
+        }
+        $stmtDiscount->close();
+
+        return [
+            'storeTotal' => $storeTotal,
+            'totalWeight' => $totalWeight,
+            'items' => $items
+        ];
+    }
+
    public function processOrder($customerId, $storeId, $paymentMethod = 'cod', $isDemo = true, $shippingFee = 0, $grandTotal = 0, $selectedIdsStr = '')
     {
         date_default_timezone_set('Asia/Ho_Chi_Minh');
@@ -65,14 +113,14 @@ class CheckoutController
         
         $finalTotal = $grandTotal > 0 ? $grandTotal : $totalCOD;
 
-        // 4. CHUNG: Tạo hóa đơn (Bảng payment)
+        //  Tạo hóa đơn (Bảng payment)
         $stmtPay = $this->conn->prepare("INSERT INTO payment (CustomerId, StoreId, Total, PaymentMethod, Status, CreatedAt) VALUES (?, ?, ?, ?, 'pending', NOW())");
         $stmtPay->bind_param("iids", $customerId, $storeId, $finalTotal, $paymentMethod);
         $stmtPay->execute();
         $paymentId = $stmtPay->insert_id;
         $stmtPay->close();
 
-        // 5. CHUNG: Lưu thông tin vận chuyển (Shipment)
+        //  Lưu thông tin vận chuyển (Shipment)
         $carrier = $isDemo ? "DEMO" : "GHN";
         $trackingCode = $isDemo ? 'DEMO' . time() : '';
         $statusShip = 'ready_to_pick';
@@ -83,7 +131,7 @@ class CheckoutController
         $stmtShip->execute();
         $stmtShip->close();
 
-        // 6. CHUNG: Lưu chi tiết hóa đơn (PaymentDetail) KÈM GIÁ ĐÃ GIẢM
+        // Lưu chi tiết hóa đơn (PaymentDetail) KÈM GIÁ ĐÃ GIẢM
         $stmtDetail = $this->conn->prepare("INSERT INTO paymentdetail (PaymentId, StoreProductId, Price, Quantity) VALUES (?, ?, ?, ?)");
         $stmtSP = $this->conn->prepare("SELECT Id, DiscountPercent FROM storeproduct WHERE ProductId = ? AND StoreId = ?");
 
@@ -106,14 +154,14 @@ class CheckoutController
         $stmtSP->close();
         $stmtDetail->close();
 
-        // 7. XÓA GIỎ HÀNG (QUAN TRỌNG: CHỈ XÓA NẾU LÀ COD)
+        // XÓA GIỎ HÀNG 
         if ($paymentMethod !== 'bank') {
             foreach ($carts as $cart) {
                 $this->cartController->removeFromCart($customerId, $cart->ProductId, $storeId);
             }
         }
 
-        // 8. RẼ NHÁNH: Tạo Link chuyển hướng VNPay
+        // Tạo Link chuyển hướng VNPay
         if ($paymentMethod === 'bank') {
             $_SESSION['vnp_PaymentId'] = $paymentId;
             require_once __DIR__ . '/../vnpay_php/config.php';
@@ -166,7 +214,7 @@ class CheckoutController
             return ['vnp_url' => $final_vnp_Url, 'paymentId' => $paymentId];
         }
 
-        // RẼ NHÁNH: Trả về nếu là COD
+        
         return ['vnp_url' => null, 'paymentId' => $paymentId];
     }
 }

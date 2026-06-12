@@ -10,7 +10,7 @@
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);
 
-            // --- BẢO MẬT: ĐỌC QUYỀN TRỰC TIẾP TỪ DATABASE (GIỐNG FILE REVIEW) ---
+            // --- BẢO MẬT DATABASE
             $customerId = $_SESSION['CustomerId'] ?? 0;
             $sqlUser = "SELECT Role, StoreId FROM customer WHERE Id = " . (int)$customerId;
             $resUser = $db->query($sqlUser);

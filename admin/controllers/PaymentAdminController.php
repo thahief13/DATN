@@ -8,7 +8,7 @@ class PaymentAdminController
         global $hostname, $username, $password, $dbname, $port;
         $conn = new mysqli($hostname, $username, $password, $dbname, $port);
         
-        // TỰ ĐỘNG ĐỌC QUYỀN TỪ DATABASE DỰA TRÊN ID ĐĂNG NHẬP
+        // phân quyền
         $customerId = $_SESSION['CustomerId'] ?? 0;
         $sqlUser = "SELECT Role, StoreId FROM customer WHERE Id = " . (int)$customerId;
         $resUser = $conn->query($sqlUser);
@@ -71,9 +71,10 @@ class PaymentAdminController
         global $hostname, $username, $password, $dbname, $port;
         $conn = new mysqli($hostname, $username, $password, $dbname, $port);
         
+        // ĐÃ THÊM CỘT sp.Stock ĐỂ LẤY SỐ LƯỢNG TỒN KHO
         $sql = "SELECT pd.Price, pd.Quantity as OrderQty, 
                        p.Title, p.Img, 
-                       sp.IsAvailable 
+                       sp.IsAvailable, sp.Stock 
                 FROM paymentdetail pd 
                 JOIN storeproduct sp ON pd.StoreProductId = sp.Id 
                 JOIN product p ON sp.ProductId = p.Id 
