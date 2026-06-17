@@ -1,13 +1,12 @@
+
 <?php
 if (session_status() == PHP_SESSION_NONE) session_start();
 
-// 1. KẾT NỐI DATABASE VÀ XỬ LÝ LƯU TIN NHẮN
 require_once '../../env.php'; 
 global $hostname, $username, $password, $dbname, $port;
 $conn = new mysqli($hostname, $username, $password, $dbname, $port);
 $conn->set_charset("utf8mb4");
 
-// NHÚNG THƯ VIỆN PHPMAILER
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -26,6 +25,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $storeId = (int)($_POST['store_id'] ?? 0); 
 
     if (!empty($name) && !empty($email) && !empty($message)) {
+        
+       
+        $storeNameDisplay = 'Ban quản lý tổng';
+        if ($storeId > 0) {
+            $stmtStore = $conn->prepare("SELECT StoreName FROM store WHERE Id = ?");
+            if ($stmtStore) {
+                $stmtStore->bind_param("i", $storeId);
+                $stmtStore->execute();
+                $resStore = $stmtStore->get_result();
+                if ($rowStore = $resStore->fetch_assoc()) {
+                    $storeNameDisplay = $rowStore['StoreName'];
+                }
+                $stmtStore->close();
+            }
+        }
+     
+
         // Lưu tin nhắn vào bảng contacts
         $sql = "INSERT INTO contacts (Name, Email, Message, StoreId, CreatedAt) VALUES (?, ?, ?, ?, NOW())";
         $stmt = $conn->prepare($sql);
@@ -33,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param("sssi", $name, $email, $message, $storeId);
             if ($stmt->execute()) {
                 
-                // --- BẮT ĐẦU GỬI EMAIL TỚI ADMIN ---
+             
                 $mail = new PHPMailer(true);
                 try {
                     // Cấu hình Server SMTP Gmail
@@ -43,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // Thông tin tài khoản gửi
                     $mail->Username   = 'kinxedo78@gmail.com';  
-                    $mail->Password   = 'cdxt uyvp glpa kzat';      
+                    $mail->Password   = 'wdba jryq toni abjo';      
                     
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; 
                     $mail->Port       = 587;
@@ -51,19 +67,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // Cấu hình người nhận và người gửi
                     $mail->setFrom('thanh.nn.64cntt@ntu.edu.vn', 'Hệ thống Trung Nguyên Legend');
-                    $mail->addAddress('kinxedo7@gmail.com'); // Email Admin nhận thông báo
+                    $mail->addAddress('kinxedo7@gmail.com'); 
                     $mail->addReplyTo($email, $name); 
 
-                    // Nội dung Email
                     $mail->isHTML(true);
                     $mail->Subject = '[Trung Nguyên Legend] Có liên hệ mới từ khách hàng: ' . $name;
+                    
                     
                     $mailBody = "
                         <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
                             <h3 style='color: #007bff;'>Thông tin liên hệ mới từ hệ thống website</h3>
                             <p><strong>Họ và tên:</strong> {$name}</p>
                             <p><strong>Email khách hàng:</strong> {$email}</p>
-                            <p><strong>Mã chi nhánh liên hệ:</strong> " . ($storeId == 0 ? 'Ban quản lý tổng' : 'Chi nhánh số ' . $storeId) . "</p>
+                            <p><strong>Chi nhánh liên hệ:</strong> {$storeNameDisplay}</p>
                             <p><strong>Nội dung tin nhắn:</strong></p>
                             <p style='background: #f4f4f4; padding: 15px; border-left: 4px solid #007bff;'>".nl2br($message)."</p>
                             <hr>
@@ -78,8 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $success_msg = "Cảm ơn bạn! Tin nhắn đã được lưu hệ thống.";
                     $error_msg = "Lỗi gửi mail: {$mail->ErrorInfo}";
                 }
-                // --- KẾT THÚC LOGIC GỬI EMAIL ---
-
+               
             } else {
                 $error_msg = "Có lỗi xảy ra trong quá trình lưu dữ liệu, vui lòng thử lại sau.";
             }
@@ -114,7 +129,6 @@ include '../header.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Giữ nguyên các Style cũ của bạn */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fff1e0; color: #333; padding-top: 125px; }
         .page-header { position: relative; background-image: url('https://mmvietnam.com/wp-content/uploads/2020/12/lien-he-new-scaled.jpg'); background-size: cover; background-position: center; height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .page-header::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 0; }
@@ -210,3 +224,4 @@ include '../header.php';
     <?php include '../footer.php'; ?>
 </body>
 </html>
+

@@ -49,7 +49,7 @@ public function deleteCategory($id){
     $db->close();
     return $result;
 }
-
+        // lấy danh chi tiết danh mục
         public function getCategoryById($id){
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);

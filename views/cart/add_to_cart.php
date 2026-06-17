@@ -2,7 +2,7 @@
 session_start();
 require_once '../../controllers/CartController.php';
 require_once '../../controllers/ProductController.php';
-
+// kiểm tra các các chức năng
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_to_cart') {
     $customerId = (int)$_SESSION['CustomerId'] ?? 0;
     $productId = intval($_POST['product_id'] ?? 0);

@@ -48,7 +48,7 @@ foreach ($stores as $store) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
-        /* ... GIỮ NGUYÊN TOÀN BỘ CSS CỦA BẠN ... */
+       
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fff1e0; padding-top: 150px; }
         .page-header { padding: 120px 0 60px; background-size: cover; background-position: center; position: relative; background-image: url('https://png.pngtree.com/thumb_back/fh260/background/20230718/pngtree-digital-retailing-illustration-laptop-keyboard-with-shopping-basket-and-e-commerce-image_3903657.jpg'); }

@@ -43,8 +43,8 @@ if ($totalPages > 1) {
         echo '<li><a href="#" class="page-link ' . $active . '" data-page="' . $i . '">' . $i . '</a></li>';
     }
     echo '</ul>';
-    echo '</div>'; // end .pagination-container
+    echo '</div>'; 
 }
 
-echo '</div>'; // end .products-container
+echo '</div>'; 
 

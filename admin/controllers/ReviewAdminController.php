@@ -55,10 +55,8 @@ class ReviewAdminController
         }
 
        
-
-
         if ($ratingType === 'good') {
-            // Tích cực: Lọc theo số sao từ 4 trở lên, hoặc AI nhận diện nếu không có số sao
+            // Tích cực: 
             $sql .= "
                 AND (
                     r.Rating >= 4
@@ -70,7 +68,7 @@ class ReviewAdminController
             ";
 
         } elseif ($ratingType === 'neutral') {
-            // Trung tính: Lọc theo số sao từ 3 đến 3.5, hoặc AI nhận diện nếu không có số sao
+            // Trung tính
             $sql .= "
                 AND (
                     (r.Rating >= 3 AND r.Rating <= 3.5)
@@ -82,7 +80,7 @@ class ReviewAdminController
             ";
 
         } elseif ($ratingType === 'bad') {
-            // Tiêu cực: Lọc theo số sao từ 2.5 trở xuống, hoặc AI nhận diện nếu không có số sao
+            // Tiêu cực: 
             $sql .= "
                 AND (
                     (r.Rating > 0 AND r.Rating <= 2.5)

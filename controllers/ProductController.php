@@ -4,7 +4,7 @@ if (!class_exists('ProductController')) {
     require_once __DIR__ . '/../models/Product.php';
 
     class ProductController
-    {
+    {       // lấy toàn bộ sản phẩm theo danh mục và chi nhánh
         public function getAllProducts(int $storeId, int $categoryId, $sortString, $searchString)
         {
             global $hostname, $username, $password, $dbname, $port;
@@ -72,7 +72,7 @@ if (!class_exists('ProductController')) {
             $db->close();
             return $products;
         }
-
+                    //lấy sản phẩm trên 1 trang để heienr thị
         public function getProducts(int $storeId, int $categoryId, string $searchString, string $sortString, int $offset, int $limit)
         {
             global $hostname, $username, $password, $dbname, $port;
@@ -100,7 +100,7 @@ if (!class_exists('ProductController')) {
                 $sql .= "p.Title LIKE '%" . $db->real_escape_string($searchString) . "%'";
             }
 
-            // Sort
+            // phân loại
             $orderBy = " p.Id DESC";
             switch ($sortString) {
                 case 'price_desc':
@@ -118,7 +118,7 @@ if (!class_exists('ProductController')) {
             }
             $sql .= " ORDER BY" . $orderBy;
 
-            // Limit & Offset
+            // Giới hạn
             $sql .= " LIMIT " . intval($limit) . " OFFSET " . intval($offset);
 
             $result = $db->query($sql);
@@ -145,7 +145,7 @@ if (!class_exists('ProductController')) {
             $db->close();
             return $products;
         }
-
+                    // đếm tổng sản phẩm khi lọc
         public function countProducts(int $storeId, int $categoryId, string $searchString)
         {
             global $hostname, $username, $password, $dbname, $port;
@@ -178,7 +178,7 @@ if (!class_exists('ProductController')) {
             $db->close();
             return $total;
         }
-
+                // lấy thông tin chi tiết của 1 sản phẩm
         public function getProductById(int $productId)
         {
             global $hostname, $username, $password, $dbname, $port;
@@ -216,7 +216,7 @@ if (!class_exists('ProductController')) {
             $db->close();
             return $product;
         }
-
+                    // Lấy danh sách sản phẩm nổi bật
         public function getFeaturedProducts(int $storeId, int $limits)
         {
             global $hostname, $username, $password, $dbname, $port;
@@ -256,7 +256,7 @@ if (!class_exists('ProductController')) {
             $db->close();
             return $products;
         }
-
+                    // lấy sản phẩm mới nhất
         public function getLatestProducts(int $storeId, int $limits)
         {
             global $hostname, $username, $password, $dbname, $port;
@@ -297,7 +297,7 @@ if (!class_exists('ProductController')) {
             return $products;
         }
 
-public function getRelatedProducts(int $storeId, int $productId)
+    public function getRelatedProducts(int $storeId, int $productId) //lấy sản phẩm hiển thị trong trang chi tiết
         {
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -340,15 +340,15 @@ $sql .= " ORDER BY RAND() LIMIT 6";
             $db->close();
             return $products;
         }
-
+                    // lấy số sao đánh giá
         public function getReviews(int $productId) {
             require_once __DIR__ . '/ReviewController.php';
             $reviewController = new ReviewController();
             return $reviewController->getReviews($productId);
         }
 
-
-        // RECOMMENDATION METHODS
+                    // sản phẩm bán chạy
+        
      public function getTopSelling(int $storeId, int $limits)
         {
             global $hostname, $username, $password, $dbname, $port;
@@ -386,7 +386,7 @@ $sql .= " ORDER BY RAND() LIMIT 6";
             $db->close();
             return $products;
         }
-
+                // lấy sp giảm giá
         public function getCheapest(int $storeId, int $limits)
         {
             global $hostname, $username, $password, $dbname, $port;

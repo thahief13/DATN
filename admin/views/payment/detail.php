@@ -23,7 +23,7 @@ if (!$paymentInfo) {
     die('<div style="color:red; text-align:center; margin-top:50px;"><h3>Không tìm thấy thông tin đơn hàng này trong hệ thống!</h3></div>');
 }
 
-// Biến cờ: Kiểm tra xem có sản phẩm nào trong đơn bị hết hàng hoặc không đủ tồn kho không
+// Kiểm tra xem có sản phẩm nào trong đơn bị hết hàng hoặc không đủ tồn kho không
 $canFulfill = true; 
 ?>
 <!DOCTYPE html>

@@ -7,7 +7,7 @@
     
     include '../../models/Customer.php';
     include '../../controllers/CustomerController.php';
-
+// kiểm tra quyền đăng nhập
     $customerId = $_SESSION['CustomerId'];
     $customerController = new CustomerController();
     $customer = $customerController->getCustomerById($customerId);

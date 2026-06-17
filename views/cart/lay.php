@@ -1,5 +1,5 @@
 <?php
-$token = 'ee236453-32f7-11f1-83ac-625f4e0bad60'; // GHN API token (demo)
+$token = 'ee236453-32f7-11f1-83ac-625f4e0bad60'; // GHN API token // xử lý backend API
 
 // 1. ProvinceId Khánh Hòa
 $provinceId = 57;

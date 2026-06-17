@@ -11,7 +11,7 @@
     unset($_SESSION['ForgotPasswordErrorMessage']);
     unset($_SESSION['ForgotPasswordErrorButton']); 
     unset($_SESSION['ForgotPasswordSuccessMessage']);
-
+// 
     if(isset($_POST['forgotPasswordButton'])){
         $email = $_POST['Email'];
         $customerController = new CustomerController();

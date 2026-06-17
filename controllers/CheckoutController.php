@@ -21,7 +21,7 @@ class CheckoutController
         $this->storeController = new StoreController();
         $this->customerController = new CustomerController();
     }
-
+        // Tính tổng số lượng và khối lượng của sản phẩm ra thành tiền
     public function calculateOrderSummary($storeCarts, $storeId)
     {
         $storeTotal = 0;
@@ -69,7 +69,7 @@ class CheckoutController
             'items' => $items
         ];
     }
-
+        // Xử lý giỏ hàng theo thời gian thực
    public function processOrder($customerId, $storeId, $paymentMethod = 'cod', $isDemo = true, $shippingFee = 0, $grandTotal = 0, $selectedIdsStr = '')
     {
         date_default_timezone_set('Asia/Ho_Chi_Minh');
@@ -78,10 +78,10 @@ class CheckoutController
             throw new Exception("Thiếu thông tin khách hàng hoặc chi nhánh");
         }
         
-        // 1. Lấy giỏ hàng gốc
+        //lấy giỏ hàng 
         $carts = $this->cartController->getCartByCustomerId($customerId, $storeId);
         
-        // 2. Lọc mảng giỏ hàng theo những món khách đã chọn
+        // giỏ hàng theo những món khách đã chọn
         if (!empty($selectedIdsStr)) {
             $selectedIds = explode(',', $selectedIdsStr);
             $carts = array_filter($carts, function($item) use ($selectedIds) {
@@ -91,7 +91,7 @@ class CheckoutController
 
         if (empty($carts)) throw new Exception("Giỏ hàng trống hoặc sản phẩm chưa được chọn.");
 
-        // 3. Tính tổng tiền có áp dụng Giảm Giá
+        // Tính tổng tiền có áp dụng Giảm Giá
         $totalCOD = 0;
         $stmtDiscount = $this->conn->prepare("SELECT DiscountPercent FROM storeproduct WHERE ProductId = ? AND StoreId = ?");
         
@@ -113,14 +113,14 @@ class CheckoutController
         
         $finalTotal = $grandTotal > 0 ? $grandTotal : $totalCOD;
 
-        //  Tạo hóa đơn (Bảng payment)
+        //  Tạo hóa đơn
         $stmtPay = $this->conn->prepare("INSERT INTO payment (CustomerId, StoreId, Total, PaymentMethod, Status, CreatedAt) VALUES (?, ?, ?, ?, 'pending', NOW())");
         $stmtPay->bind_param("iids", $customerId, $storeId, $finalTotal, $paymentMethod);
         $stmtPay->execute();
         $paymentId = $stmtPay->insert_id;
         $stmtPay->close();
 
-        //  Lưu thông tin vận chuyển (Shipment)
+        //  Lưu thông tin vận chuyển
         $carrier = $isDemo ? "DEMO" : "GHN";
         $trackingCode = $isDemo ? 'DEMO' . time() : '';
         $statusShip = 'ready_to_pick';
@@ -131,7 +131,7 @@ class CheckoutController
         $stmtShip->execute();
         $stmtShip->close();
 
-        // Lưu chi tiết hóa đơn (PaymentDetail) KÈM GIÁ ĐÃ GIẢM
+        // Lưu chi tiết hóa đơn  KÈM GIÁ ĐÃ GIẢM
         $stmtDetail = $this->conn->prepare("INSERT INTO paymentdetail (PaymentId, StoreProductId, Price, Quantity) VALUES (?, ?, ?, ?)");
         $stmtSP = $this->conn->prepare("SELECT Id, DiscountPercent FROM storeproduct WHERE ProductId = ? AND StoreId = ?");
 
@@ -144,7 +144,7 @@ class CheckoutController
                 $discount = (int)$spRow['DiscountPercent'];
                 
                 $product = $this->productController->getProductById($cart->ProductId);
-                $finalPrice = (int)($product->Price * (1 - $discount / 100)); // Lưu giá đã giảm vào DB
+                $finalPrice = (int)($product->Price * (1 - $discount / 100)); // Lưu giá đã giảm vào database
                 $quantity = (int)$cart->Quantity;
                 
                 $stmtDetail->bind_param("iiid", $paymentId, $storeProductId, $finalPrice, $quantity);

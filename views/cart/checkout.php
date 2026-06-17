@@ -6,7 +6,6 @@ require_once '../../controllers/CartController.php';
 require_once '../../controllers/ProductController.php';
 require_once '../../controllers/CustomerController.php';
 require_once '../../controllers/StoreController.php';
-// Gọi Controller mới
 require_once '../../controllers/CheckoutController.php'; 
 
 if (!isset($_SESSION['CustomerId'])) {
@@ -66,9 +65,7 @@ $storePhone = preg_replace('/\D/', '', $store->Phone ?? '');
 $storeDistrict = (int)($store->DistrictId ?? 1548); 
 $storeWard = trim((string)($store->WardCode ?? '410110')); 
 
-// -------------------------------------------------------------------------------------
-// GỌI HÀM XỬ LÝ LOGIC TỪ CONTROLLER (MVC CHUẨN)
-// -------------------------------------------------------------------------------------
+
 $ghn_error = '';
 $summaryData = $checkoutController->calculateOrderSummary($storeCarts, $storeId);
 
@@ -82,7 +79,7 @@ if ($storeTotal <= 0) die('<div class="alert alert-danger text-center">Tổng gi
 define('GHN_TOKEN', 'ee236453-32f7-11f1-83ac-625f4e0bad60'); 
 define('GHN_SHOP_ID', 6372158); 
 
-$storeShippingFee = 15000; 
+$storeShippingFee = 15000; // áp dụng mặc định
 $storeLeadtime = date('H:i d/m/Y', strtotime('+30 minutes'));
 $ghn_error = '';
 

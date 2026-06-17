@@ -16,7 +16,6 @@ global $hostname, $username, $password, $dbname, $port;
 $db = new mysqli($hostname, $username, $password, $dbname, $port);
 $db->set_charset("utf8mb4");
 
-// 1. TỰ ĐỘNG VÀO DATABASE LẤY QUYỀN ADMIN
 $sqlUser = "SELECT Role, StoreId FROM customer WHERE Id = $customerId";
 $resUser = $db->query($sqlUser);
 $role = 0;
@@ -27,14 +26,12 @@ if ($resUser && $resUser->num_rows > 0) {
     $storeId = (int)$u['StoreId'];
 }
 
-// Nếu là khách hàng bình thường (Role = 0) -> Chặn
 if ($role == 0) {
     echo json_encode(['success' => false, 'message' => 'Lỗi: Không phải Admin']);
     $db->close();
     exit;
 }
 
-// 2. LẤY TẤT CẢ TRẠNG THÁI ĐƠN HÀNG CỦA ADMIN / QUẢN LÝ
 $sql = "SELECT Id, Status FROM payment";
 if ($role == 2 && $storeId > 0) {
     $sql .= " WHERE StoreId = " . $storeId;
@@ -54,7 +51,6 @@ $db->close();
 
 $notifications = [];
 
-
 if (!isset($_SESSION['AdminOrderStatuses'])) {
     $_SESSION['AdminOrderStatuses'] = $currentOrders;
     session_write_close();
@@ -73,7 +69,6 @@ foreach ($currentOrders as $orderId => $status) {
             'OrderId' => $orderId
         ];
     } 
-  
     else {
         $oldStatus = $oldOrders[$orderId];
         if ($oldStatus != $status) {

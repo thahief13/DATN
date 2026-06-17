@@ -7,7 +7,7 @@ if (!isset($_SESSION['CustomerId'])) {
     exit();
 }
 
-// Gọi file kết nối và controller 
+
 require_once '../../env.php'; 
 require_once '../../controllers/CustomerPaymentController.php';
 

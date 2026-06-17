@@ -1,6 +1,5 @@
 <?php
 if (session_status() == PHP_SESSION_NONE) session_start();
-// Đã sửa /../ thành /../../
 require_once __DIR__ . '/../../controllers/CustomerAdminController.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -25,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['message'] = 'Lỗi: Email đã tồn tại hoặc có lỗi khi cập nhật!';
         $_SESSION['message_type'] = 'error';
     }
-    // Đã sửa lùi ra trang index gốc
+    
     header('Location: ../index.php?page=customer');
     exit;
 }

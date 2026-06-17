@@ -41,6 +41,7 @@ try {
 
         // Connect DB app
         require_once '../../env.php';
+        global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
         if ($db->connect_error) {
             $returnData['RspCode'] = '99';

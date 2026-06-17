@@ -4,7 +4,7 @@ if (!class_exists('StoreController')) {
     require_once __DIR__ . '/../models/Store.php';
 
     class StoreController
-    {
+    {   /// lấy danh sách toàn bộ cửa hàng
         public function getAllStores()
         {
             global $hostname, $username, $password, $dbname, $port;

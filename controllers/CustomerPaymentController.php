@@ -2,7 +2,7 @@
 require_once __DIR__ . '/PaymentController.php';
 
 class CustomerPaymentController extends PaymentController
-{
+{       // lấy chi tiết hóa đơn đơn hàng
     public function getCustomerPayments(int $customerId)
     {
         global $hostname, $username, $password, $dbname, $port;
@@ -35,13 +35,13 @@ class CustomerPaymentController extends PaymentController
         $db->close();
         return $payments;
     }
-
+        // hủy đơn
     public function deletePayment(int $paymentId, int $customerId)
     {
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
         
-        // Check permission + status
+        // Check trạng thái và phân quyền
         $sql = "SELECT Status FROM payment WHERE Id = ? AND CustomerId = ?";
         $stmt = $db->prepare($sql);
         $stmt->bind_param("ii", $paymentId, $customerId);
@@ -55,7 +55,7 @@ class CustomerPaymentController extends PaymentController
             return false;
         }
         
-        // Delete cascade
+        // Xóa đơn hàng
         $db->begin_transaction();
         try {
             $db->query("DELETE FROM paymentdetail WHERE PaymentId = $paymentId");

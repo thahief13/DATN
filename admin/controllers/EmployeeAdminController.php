@@ -10,7 +10,7 @@ class EmployeeAdminController {
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
         $db->set_charset("utf8mb4");
 
-        // --- BẢO MẬT: ĐỌC QUYỀN TRỰC TIẾP TỪ DATABASE ---
+        
         $customerId = $_SESSION['CustomerId'] ?? 0;
         $sqlUser = "SELECT Role, StoreId FROM customer WHERE Id = " . (int)$customerId;
         $resUser = $db->query($sqlUser);
@@ -23,7 +23,7 @@ class EmployeeAdminController {
             $userStoreId = (int)$u['StoreId'];
         }
 
-        // ÉP BUỘC: Nếu là quản lý chi nhánh (Role 2), bỏ qua yêu cầu khác, chỉ lấy nhân viên của họ
+        //Nếu là quản lý chi nhánh (Role 2), bỏ qua yêu cầu khác, chỉ lấy nhân viên của họ
         if ($role == 2 && $userStoreId > 0) {
             $filterStoreId = $userStoreId;
         }
@@ -52,7 +52,7 @@ class EmployeeAdminController {
         $db->close();
         return $employees;
     }
-
+        // thêm nv
     public function addEmployee($employee) {
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -69,7 +69,7 @@ class EmployeeAdminController {
         $stmt->close(); $db->close();
         return $isSuccess ? true : "Lỗi Database: " . $error;
     }
-
+        // sửa nv
     public function updateEmployee($employee) {
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);

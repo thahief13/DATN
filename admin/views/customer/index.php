@@ -142,15 +142,15 @@ unset($_SESSION['message'], $_SESSION['message_type']);
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // ĐÃ SỬA: Đổi const thành var để tránh lỗi khi AJAX load lại trang
+   // tránh lỗi khi AJAX load lại trang
     var customersData = <?= $customersJson ?>;
 
-    // ĐÃ SỬA: Xóa sự kiện cũ (nếu có) trước khi tạo mới để tránh chạy đè
+     //Xóa sự kiện cũ 
     if (window.customerModalHandler) {
         document.removeEventListener('show.bs.modal', window.customerModalHandler);
     }
 
-    // ĐÃ SỬA: Gộp chung vào 1 hàm dùng chung (Event Delegation)
+    //Gộp chung vào 1 hàm dùng chung (Event Delegation)
     window.customerModalHandler = function(e) {
         var m = e.target;
         var btn = e.relatedTarget;

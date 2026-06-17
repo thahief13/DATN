@@ -21,7 +21,7 @@ class RoleAdminController {
         return $roles;
     }
 
-    // Đổi tên từ createRole thành addRole cho đồng nhất
+    // thêm mới nhân viên
     public function addRole($role){
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -35,6 +35,7 @@ class RoleAdminController {
         return $result;
     }
 
+    // lấy chi tiết 1 nv
     public function getRoleById($id){
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -72,14 +73,14 @@ class RoleAdminController {
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
         
-        // Bước 1: Gỡ vai trò khỏi các nhân viên đang giữ vai trò này
+        
         $sqlUnset = "UPDATE employee SET RoleId = 0 WHERE RoleId = ?";
         $stmtUnset = $db->prepare($sqlUnset);
         $stmtUnset->bind_param("i", $id);
         $stmtUnset->execute();
         $stmtUnset->close();
 
-        // Bước 2: Xóa vai trò khỏi bảng employeerole (Sửa lỗi xóa nhầm bảng employee)
+        
         $sqlDel = "DELETE FROM employeerole WHERE Id = ?";
         $stmtDel = $db->prepare($sqlDel);
         $stmtDel->bind_param("i", $id);

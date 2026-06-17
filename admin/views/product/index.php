@@ -21,7 +21,7 @@ if (!$customer || !$customer->Role) {
 $success_msg = $_SESSION['success_message'] ?? '';
 $error_msg = $_SESSION['error_message'] ?? '';
 unset($_SESSION['success_message'], $_SESSION['error_message']);
-// LẤY PARAMETERS TỪ URL
+// LẤY thông tin TỪ URL
 $selectedStore = isset($_GET['store_id']) ? (int)$_GET['store_id'] : 0;
 $searchKeyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
 
@@ -282,7 +282,6 @@ $dbAuth->close();
     
     var IMG_BASE_PATH = '/app/img/SanPham/';
     
-    // ĐÃ SỬA: Đưa toàn bộ việc khởi tạo giao diện vào sự kiện DOMContentLoaded để đảm bảo HTML đã load xong
     document.addEventListener('DOMContentLoaded', function() {
         var choiceOpts = { 
             removeItemButton: true, 
@@ -305,7 +304,7 @@ $dbAuth->close();
         }
     });
 
-    // Hàm điền dữ liệu cho Modal XEM
+    // Hàm điền dữ liệu  XEM
     function fillViewModal(id) {
         var p = productsData.find(x => x.Id == id);
         if(!p) return;
@@ -320,7 +319,7 @@ $dbAuth->close();
         else { img.style.display = 'none'; }
     }
 
-    // Hàm điền dữ liệu cho Modal SỬA
+    // Hàm điền dữ liệu SỬA
     function fillEditModal(id) {
         var p = productsData.find(x => x.Id == id);
         if(!p) return;
@@ -334,7 +333,7 @@ $dbAuth->close();
         if(p.Img) { img.src = IMG_BASE_PATH + p.Img; img.style.display = 'inline-block'; } 
         else { img.style.display = 'none'; }
 
-        // Đổ danh sách cửa hàng cũ vào form Sửa (Cập nhật cho Choices.js)
+        
         if (window.eStoreChoices && p.StoreIds) {
             window.eStoreChoices.removeActiveItems();
             window.eStoreChoices.setChoiceByValue(p.StoreIds.map(String));

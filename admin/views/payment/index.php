@@ -3,7 +3,7 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// BẮT BUỘC ĐỌC QUYỀN TỪ DATABASE ĐỂ TRÁNH LỖI BỘ NHỚ TẠM (SESSION)
+// TRÁNH LỖI BỘ NHỚ TẠM (SESSION)
 require_once __DIR__ . '/../../../controllers/CustomerController.php';
 $customerCtrl = new CustomerController();
 $loggedInUser = $customerCtrl->getCustomerById($_SESSION['CustomerId'] ?? 0);
@@ -11,16 +11,16 @@ $loggedInUser = $customerCtrl->getCustomerById($_SESSION['CustomerId'] ?? 0);
 $userRole = $loggedInUser->Role ?? 1;
 $userStoreId = $loggedInUser->StoreId ?? 0;
 
-// Ép cập nhật lại Session cho đồng bộ
+//p nhật lại Session cho đồng bộ
 $_SESSION['Role'] = $userRole;
 $_SESSION['StoreId'] = $userStoreId;
 
-// Gọi Controller xử lý đơn hàng
+
 require_once __DIR__ . '/../../../admin/controllers/PaymentAdminController.php';
 $paymentController = new PaymentAdminController();
 $rawPayments = $paymentController->getAllPayments();
 
-// Đảm bảo dữ liệu luôn là mảng
+
 $payments = is_array($rawPayments) ? $rawPayments : [];
 ?>
 <!DOCTYPE html>
@@ -132,6 +132,7 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // phân trang
         var allPayments = <?= json_encode($payments) ?> || [];
         var filteredData = [];
         var currentPage = 1;
@@ -365,7 +366,7 @@ $payments = is_array($rawPayments) ? $rawPayments : [];
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
-    // ĐƯỜNG DẪN TUYỆT ĐỐI KHÔNG BAO GIỜ BỊ LỖI
+    // thông báo
     const adminCheckUrl = 'http://<?php echo $_SERVER["HTTP_HOST"]; ?>/app/admin/views/check_new_orders.php';
 
     function fetchAdminOrders() {
@@ -383,17 +384,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     showAdminNotification(noti.Message, noti.Type);
                 });
                 
-                // Tự động load lại bảng để Admin thấy đơn mới
+                
                 setTimeout(() => location.reload(), 3000); 
             }
         })
         .catch(err => console.log('Radar Admin đang chạy ngầm...'));
     }
 
-    // Chạy ngay lập tức khi Admin vừa vào trang
+   
     fetchAdminOrders();
 
-    // Quét liên tục mỗi 4 giây
+   
     setInterval(fetchAdminOrders, 4000); 
 
     function showAdminNotification(message, type) {

@@ -3,7 +3,6 @@
         session_start();
     }
 
-    // Session đã được kiểm tra trong admin/views/index.php rồi, không cần kiểm tra lại
     require_once __DIR__ . '/../../../controllers/CustomerController.php';
     $customerController = new CustomerController();
 

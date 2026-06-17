@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../env.php';
 
 class PaymentAdminController 
 {
-   public function getAllPayments()
+   public function getAllPayments() // lấy tất cả hóa đơn
     {
         global $hostname, $username, $password, $dbname, $port;
         $conn = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -26,7 +26,7 @@ class PaymentAdminController
                 LEFT JOIN customer c ON p.CustomerId = c.Id 
                 LEFT JOIN store s ON p.StoreId = s.Id";
         
-        // NẾU LÀ QUẢN LÝ CHI NHÁNH -> CHỈ LẤY ĐƠN CỦA CHI NHÁNH ĐÓ
+        // NẾU LÀ QUẢN LÝ CHI NHÁNH CHỈ LẤY ĐƠN CỦA CHI NHÁNH ĐÓ
         if ($role == 2 && $storeId > 0) {
             $sql .= " WHERE p.StoreId = " . (int)$storeId;
         }
@@ -71,7 +71,7 @@ class PaymentAdminController
         global $hostname, $username, $password, $dbname, $port;
         $conn = new mysqli($hostname, $username, $password, $dbname, $port);
         
-        // ĐÃ THÊM CỘT sp.Stock ĐỂ LẤY SỐ LƯỢNG TỒN KHO
+        //ĐỂ LẤY SỐ LƯỢNG TỒN KHO
         $sql = "SELECT pd.Price, pd.Quantity as OrderQty, 
                        p.Title, p.Img, 
                        sp.IsAvailable, sp.Stock 

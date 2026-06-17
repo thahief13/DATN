@@ -102,7 +102,7 @@ try {
 
     $db->commit();
 } catch (Exception $e) {
-    // Nếu bị lỗi Thiếu hàng, hệ thống sẽ Rollback (hủy toàn bộ thao tác) và ném thông báo ra giao diện
+    // Nếu bị lỗi Thiếu hàng, hệ thống sẽ thông báo ra giao diện
     $db->rollback();
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     $db->close();

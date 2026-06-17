@@ -295,7 +295,6 @@ window.location.href = 'http://localhost/app/views/product/index.php';
 
 
 
-        // Optional: Later integrate store selector from product/index.php
     </script>
 
     <?php include "../footer.php"; ?>

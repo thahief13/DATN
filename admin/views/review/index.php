@@ -2,13 +2,9 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
-
 require_once __DIR__ . '/../../../env.php';
 
 global $hostname, $username, $password, $dbname, $port;
-
-
-
 $dbAuth = new mysqli($hostname, $username, $password, $dbname, $port);
 $dbAuth->set_charset("utf8mb4");
 
@@ -31,16 +27,11 @@ $dbAuth->close();
 $_SESSION['Role'] = $userRole;
 $_SESSION['StoreId'] = $userStoreId;
 
-
-
-
 require_once __DIR__ . '/../../../admin/controllers/ReviewAdminController.php';
-require_once __DIR__ . '/../../../admin/controllers/StoreController.php';
+require_once __DIR__ . '/../../../admin/controllers/StoreAdminController.php';
 
 $reviewController = new ReviewAdminController();
-$storeController = new StoreController();
-
-
+$storeController = new StoreAdminController();
 
 
 $storeId = ($userRole == 2 && $userStoreId > 0)
@@ -51,11 +42,8 @@ $ratingType = $_GET['ratingType'] ?? '';
 
 
 
-
 $reviews = $reviewController->getAllReviews($storeId, $ratingType);
 $stores = $storeController->getAllStores();
-
-
 
 
 $goodCount = 0;

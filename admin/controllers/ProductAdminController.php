@@ -4,13 +4,13 @@
 
     class ProductAdminController {
         
-        // Đã thêm tham số $keyword để tìm kiếm bằng SQL
+        // tham số  để tìm kiếm 
         public function getAllProducts(int $categoryId = 0, int $storeId = 0, string $keyword = '')
         {
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);
 
-            // --- BẢO MẬT DATABASE
+            // phân quyền
             $customerId = $_SESSION['CustomerId'] ?? 0;
             $sqlUser = "SELECT Role, StoreId FROM customer WHERE Id = " . (int)$customerId;
             $resUser = $db->query($sqlUser);
@@ -23,7 +23,7 @@
                 $userStoreId = (int)$u['StoreId'];
             }
 
-            // ÉP BUỘC: Nếu là quản lý chi nhánh (Role 2), chỉ lấy sản phẩm của họ
+            //Nếu là quản lý chi nhánh (Role 2), chỉ lấy sản phẩm của họ
             if ($role == 2 && $userStoreId > 0) {
                 $storeId = $userStoreId;
             }
@@ -75,7 +75,7 @@
             return $products;
         }
 
-        // --- CÁC HÀM CÒN LẠI GIỮ NGUYÊN KHÔNG ĐỔI ---
+        // Lấy chi tiết 1 sản phẩm
         public function getProductById($productId){
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -93,7 +93,7 @@
             }
             $db->close(); return $product;
         }
-
+        // thêm sản phẩm
         public function addProduct($product){
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -105,7 +105,7 @@
             $stmt->close(); $db->close();
             return $isSuccess && ($insertId > 0) ? $insertId : 0;
         }
-
+            //update sản phẩm
         public function updateProduct($product, $newImage = null) {
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -135,7 +135,7 @@
             if ($stmt2) { $stmt2->bind_param("i", $id); $result = $stmt2->execute(); $stmt2->close(); }
             $db->close(); return $result;
         }
-
+            // Xem tất cả sp
         public function getAllStores() {
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -144,7 +144,7 @@
             if ($res) { while ($row = $res->fetch_object()) { $stores[] = $row; } }
             $db->close(); return $stores;
         }
-
+        // thêm sp vào chi nhánh
         public function addProductToStore($productId, $storeIds) {
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -161,7 +161,7 @@
             }
             $db->close(); return true;
         }
-
+            // lấy sáng phẩm chi nhánh
         public function getProductStores($productId) {
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);

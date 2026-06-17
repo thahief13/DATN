@@ -20,9 +20,8 @@ class RevenueAdminController {
             $role = (int)$u['Role'];
             $userStoreId = (int)$u['StoreId'];
         }
-        // --- KẾT THÚC ĐỌC QUYỀN ---
-
-        // Ép kiểu để an toàn tuyệt đối với cơ sở dữ liệu
+        
+        
         $day = (int)$day;
         $month = (int)$month;
         $year = (int)$year;
@@ -32,16 +31,16 @@ class RevenueAdminController {
                 JOIN payment p ON s.Id = p.StoreId AND p.Status IN ('paid', 'đã giao', 'thành công')
                 WHERE 1=1 ";
 
-        // CHẶN XEM TRỘM: Nếu là Quản lý chi nhánh (Role = 2) thì chỉ lấy doanh thu của chi nhánh đó
+        // Nếu là Quản lý chi nhánh  thì chỉ lấy doanh thu của chi nhánh đó
         if ($role == 2 && $userStoreId > 0) {
             $sql .= " AND s.Id = " . (int)$userStoreId;
         }
 
-        // Nối thêm điều kiện lọc theo tháng/năm
+        // loc theo thang nam
         if ($month > 0 && $year > 0) {
             $sql .= " AND MONTH(p.CreatedAt) = $month AND YEAR(p.CreatedAt) = $year ";
         }
-        // Nối thêm điều kiện lọc theo ngày nếu có chọn
+        // loc theo ngày
         if ($day > 0) {
             $sql .= " AND DAY(p.CreatedAt) = $day ";
         }
@@ -65,7 +64,7 @@ class RevenueAdminController {
         $db->close();
         return $revenues;
     }
-
+        // cập nhật báo cáo theo tháng
     public function syncRevenue($storeId, $amount, $date) {
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);

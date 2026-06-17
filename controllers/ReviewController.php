@@ -4,7 +4,7 @@ require_once __DIR__ . '/../models/Review.php';
 require_once __DIR__ . '/../controllers/CustomerController.php';
 
 class ReviewController {
-    
+    // lấy sản phảm đánh giá
     public function getReviews($storeProductId) { 
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -33,7 +33,7 @@ class ReviewController {
         $db->close();
         return $reviews;
     } // Kết thúc hàm getReviews
-
+        // thêm đánh giá
    public function addReview($storeProductId, $customerId, $rating, $comment, $aiSentiment = 'TRUNG_TINH') {
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -54,7 +54,7 @@ class ReviewController {
         $db->close();
         return $result;
     }
-    
+            // cập nhật
     public function updateProductRating($storeProductId) {
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);

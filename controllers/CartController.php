@@ -9,7 +9,7 @@ if (!class_exists('CartController')) {
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);
 
-            // BỔ SUNG: Lấy thêm sp.DiscountPercent từ cơ sở dữ liệu
+            
             $sql = "SELECT ci.*, sp.ProductId, sp.StoreId, sp.DiscountPercent 
                     FROM cart c
                     JOIN cart_item ci ON c.Id = ci.CartId
@@ -32,15 +32,14 @@ if (!class_exists('CartController')) {
                 $item->ProductId = $row['ProductId'];
                 $item->StoreId = $row['StoreId'];
                 $item->Quantity = $row['Quantity'];
-                // BỔ SUNG: Lưu lại % giảm giá
-                $item->DiscountPercent = $row['DiscountPercent'] ?? 0;
+                $item->DiscountPercent = $row['DiscountPercent'] ?? 0; //Lưu lại % giảm giá
                 $cartItems[] = $item;
             }
             $db->close();
             return $cartItems;
         }
 
-        // Thêm sản phẩm vào giỏ hàng (Xử lý logic 2 bảng)
+        // Thêm sản phẩm vào giỏ hàng 
         public function addToCart($customerId, $productId, $storeId, $quantity) {
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -85,7 +84,7 @@ if (!class_exists('CartController')) {
             $db->close();
             return $finalResult;
         }
-
+            // cập nhật số lượng trong giỏ hàng
         public function updateQuantity($customerId, $productId, $storeId, $quantity) {
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -101,7 +100,7 @@ if (!class_exists('CartController')) {
             $db->close();
             return $result;
         }
-
+            // xóa
         public function deleteItemInCart($customerId, $productId, $storeId) {
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -116,7 +115,7 @@ if (!class_exists('CartController')) {
             $db->close();
             return $result;
         }
-
+        // tính tiền
         public function getTotal($customerId) {
             global $hostname, $username, $password, $dbname, $port;
             $db = new mysqli($hostname, $username, $password, $dbname, $port);

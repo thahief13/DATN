@@ -5,7 +5,7 @@ require_once '../../controllers/CheckoutController.php';
 global $hostname, $username, $password, $dbname;
 $conn = new mysqli($hostname, $username, $password, $dbname);
 if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
-
+// kiểm tra thanh toán
 $customerId = $_SESSION['CustomerId'] ?? null;
 $storeId = $_POST['storeId'] ?? $_SESSION['CheckoutStoreId'] ?? 0;
 $shippingFee = floatval($_POST['shippingFee'] ?? 0);
@@ -22,11 +22,8 @@ try {
 
 $result = $checkout->processOrder($customerId, $storeId, $paymentMethod, true, $shippingFee, $totalAmount, $selectedProductIds);
     
-    // Sau khi đặt hàng thành công thì xóa session này đi
+    //Sau khi đặt hàng thành công thì xóa session này đi
     unset($_SESSION['SelectedProductIds']);
-
-
-
 
     if (isset($result['vnp_url'])) {
         // Redirect VNPay URL

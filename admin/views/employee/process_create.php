@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $controller->addEmployee($emp);
         
         if ($result === true) {
-            $_SESSION['success_message'] = "🎉 Đã thêm nhân viên thành công!";
+            $_SESSION['success_message'] = " Đã thêm nhân viên thành công!";
         } else {
             // Trả về lỗi CSDL nếu thất bại
             $_SESSION['error_message'] = $result; 

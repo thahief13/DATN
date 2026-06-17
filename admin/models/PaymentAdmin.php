@@ -8,7 +8,7 @@ class PaymentAdmin
         global $hostname, $username, $password, $dbname, $port;
         $conn = new mysqli($hostname, $username, $password, $dbname, $port);
         
-        // TỰ ĐỘNG ĐỌC QUYỀN TỪ DATABASE DỰA TRÊN ID ĐĂNG NHẬP
+        
         $customerId = $_SESSION['CustomerId'] ?? 0;
         $sqlUser = "SELECT Role, StoreId FROM customer WHERE Id = " . (int)$customerId;
         $resUser = $conn->query($sqlUser);

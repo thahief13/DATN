@@ -1,7 +1,7 @@
 <?php
 if (session_status() == PHP_SESSION_NONE) session_start();
 
-// 1. KẾT NỐI DB ĐỂ LẤY QUYỀN CHUẨN XÁC NHẤT (BẢO MẬT)
+
 require_once __DIR__ . '/../../../env.php';
 global $hostname, $username, $password, $dbname, $port;
 $dbAuth = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -25,15 +25,12 @@ $stores = $storeController->getAllStores();
 
 $revenueController = new RevenueAdminController();
 
-// 2. NHẬN THAM SỐ TỪ FORM (Từ ngày - Đến ngày)
 // Mặc định hiển thị từ ngày đầu tháng đến ngày hiện tại
 $fromDate = isset($_GET['fromDate']) ? $_GET['fromDate'] : date('Y-m-01');
 $toDate = isset($_GET['toDate']) ? $_GET['toDate'] : date('Y-m-t');
 
-// 3. XỬ LÝ PHÂN QUYỀN VÀ BỘ LỌC CỬA HÀNG
 $filterStoreId = isset($_GET['store_id']) ? (int)$_GET['store_id'] : 0;
 
-// Ép buộc Quản lý chi nhánh (Role 2) chỉ được xem cửa hàng của mình
 if ($userRole == 2 && $userStoreId > 0) {
     $filterStoreId = $userStoreId; 
 }
@@ -56,8 +53,7 @@ $footerText = ($filterStoreId > 0 || $userRole == 2) ? "TỔNG CỘNG CHI NHÁNH
 $chartType = ($userRole == 1 && $filterStoreId == 0) ? 'pie' : 'bar';
 $chartTitle = ($filterStoreId > 0) ? 'Biểu đồ: ' . htmlspecialchars($filterStoreName) : 'Tỷ trọng doanh thu các chi nhánh';
 
-// 4. LẤY VÀ LỌC DỮ LIỆU DOANH THU THEO KHOẢNG THỜI GIAN
-// Lấy toàn bộ dữ liệu (truyền 0,0,0) sau đó lọc bằng PHP để không cần sửa Controller cũ
+//  lọc dữ liệu theo thời gian ngày tháng năm
 $rawRevenues = $revenueController->getRevenueByStore(0, 0, 0);
 $revenues = [];
 $chartDataMap = [];
@@ -68,12 +64,12 @@ $endTimestamp = strtotime($toDate . ' 23:59:59');
 foreach ($rawRevenues as $r) {
     $rTime = strtotime($r->RevenueDate);
     
-    // Lọc theo khoảng ngày
+    
     if ($rTime < $startTimestamp || $rTime > $endTimestamp) {
         continue;
     }
 
-    // Lọc theo cửa hàng
+   
     if ($filterStoreId > 0 && $r->StoreName !== $filterStoreName) {
         continue;
     }
@@ -221,7 +217,7 @@ $chartData = array_values($chartDataMap);
         const ctx = canvas.getContext('2d');
         const chartType = '<?= $chartType ?>'; // Nhận loại biểu đồ từ PHP
         
-        // Cấu hình màu sắc: Nếu là hình tròn (pie) thì dùng nhiều màu, nếu hình cột (bar) thì dùng màu vàng cam.
+        // Cấu hình màu sắc
         const bgColors = chartType === 'pie' 
             ? ['#0dcaf0', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14', '#20c997', '#0d6efd'] 
             : 'rgba(255, 179, 0, 0.7)';
@@ -247,9 +243,9 @@ $chartData = array_values($chartDataMap);
                 scales: chartType === 'bar' ? { 
                     y: { beginAtZero: true, grid: { display: false } }, 
                     x: { grid: { display: false } } 
-                } : {}, // Ẩn thang đo nếu là biểu đồ tròn
+                } : {}, 
                 plugins: { 
-                    // Hiển thị chú thích (Legend) nếu là biểu đồ tròn
+                    // Hiển thị chú thích nếu là biểu đồ tròn
                     legend: { 
                         display: chartType === 'pie', 
                         position: 'right' 

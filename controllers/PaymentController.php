@@ -65,7 +65,7 @@ class PaymentController
         $db->close();
         return $payment;
     }
-
+    // cập nhật địa chỉ khách hàng
     public function updatePaymentAddresses($paymentId, $storeAddress, $deliveryAddress) {
         global $hostname, $username, $password, $dbname, $port;
         $db = new mysqli($hostname, $username, $password, $dbname, $port);

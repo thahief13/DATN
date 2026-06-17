@@ -254,13 +254,12 @@ include '../header.php';
 function saveCustomerInfo(paymentId, event) {
     console.log('Starting save for payment:', paymentId);
     
-    // Check if all required elements exist
     const requiredFields = ['firstName', 'lastName', 'phone', 'email', 'storeAddress', 'deliveryAddress'];
     for (const fieldId of requiredFields) {
         const element = document.getElementById(fieldId);
         if (!element) {
             console.error('Element not found:', fieldId);
-            alert('❌ Lỗi: Không tìm thấy trường ' + fieldId);
+            alert(' Lỗi: Không tìm thấy trường ' + fieldId);
             return;
         }
     }
@@ -277,7 +276,7 @@ function saveCustomerInfo(paymentId, event) {
     
     console.log('Data to send:', data);
     
-    // Show loading
+    
     const btn = event ? event.target : document.querySelector('.btn-success');
     console.log('Button found:', btn);
     const originalText = btn.textContent;
@@ -298,17 +297,17 @@ function saveCustomerInfo(paymentId, event) {
     }).then(result => {
         console.log('Result:', result);
         if (result.success) {
-            alert('✅ Lưu thông tin thành công!');
+            alert(' Lưu thông tin thành công!');
             // Chuyển về chế độ xem chi tiết (không có edit mode)
             location.href = 'detail.php?id=' + paymentId;
         } else {
-            alert('❌ ' + result.message);
+            alert(' ' + result.message);
             btn.textContent = originalText;
             btn.disabled = false;
         }
     }).catch(err => {
         console.error('Error:', err);
-        alert('❌ Lỗi kết nối: ' + err.message);
+        alert(' Lỗi kết nối: ' + err.message);
         btn.textContent = originalText;
         btn.disabled = false;
     });
@@ -326,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function deleteOrder(paymentId) {
-    if (!confirm('Bạn có chắc muốn xóa đơn hàng này?\n\n⚠️ Hành động này không thể hoàn tác và sẽ xóa vĩnh viễn đơn hàng.')) {
+    if (!confirm('Bạn có chắc muốn xóa đơn hàng này?\n\n Hành động này không thể hoàn tác và sẽ xóa vĩnh viễn đơn hàng.')) {
         return;
     }
 
@@ -342,15 +341,15 @@ function deleteOrder(paymentId) {
         body: `paymentId=${paymentId}`
     }).then(res => res.json()).then(data => {
         if (data.success) {
-            alert('✅ Đã xóa đơn hàng thành công!');
+            alert(' Đã xóa đơn hàng thành công!');
             window.location.href = 'index.php';
         } else {
-            alert('❌ ' + data.message);
+            alert(' ' + data.message);
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
     }).catch(err => {
-        alert('❌ Lỗi kết nối!');
+        alert(' Lỗi kết nối!');
         console.error(err);
         btn.innerHTML = originalText;
         btn.disabled = false;

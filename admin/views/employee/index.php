@@ -23,7 +23,7 @@ $userRole = (int)($authData['Role'] ?? 1);
 $userStoreId = (int)($authData['StoreId'] ?? 0);
 $dbAuth->close();
 
-if ($userRole == 0) { // Chặn người dùng bình thường
+if ($userRole == 0) { 
     header('Location: ../../../views/home/index.php');
     exit();
 }
@@ -33,7 +33,7 @@ require_once __DIR__ . '/../../controllers/RoleAdminController.php';
 require_once __DIR__ . '/../../controllers/StoreAdminController.php';
 
 $employeeController = new EmployeeAdminController();
-$employeeAdmins = $employeeController->getAllEmployees(); // Hàm trong Controller đã tự chặn quyền
+$employeeAdmins = $employeeController->getAllEmployees(); 
 
 $roleController = new RoleAdminController();
 $roles = $roleController->getAllRoles();
@@ -50,12 +50,11 @@ foreach ($stores as $s) { $storeMap[$s->Id] = $s->StoreName; }
 $empArrayForJs = [];
 $uniqueStores = [];
 
-// --- BIẾN CHỨA DỮ LIỆU CHO BIỂU ĐỒ ---
+
 $chartRoleCount = [];
 $chartRoleSalary = [];
 $totalEmployees = 0;
 $totalSalary = 0;
-// -------------------------------------
 
 foreach ($employeeAdmins as $emp) {
     $rName = isset($roleMap[$emp->RoleId]) ? $roleMap[$emp->RoleId] : 'Chưa phân công';
@@ -75,7 +74,7 @@ foreach ($employeeAdmins as $emp) {
         $uniqueStores[] = $emp->StoreId;
     }
 
-    // TÍNH TOÁN DỮ LIỆU BIỂU ĐỒ
+  
     if (!isset($chartRoleCount[$rName])) {
         $chartRoleCount[$rName] = 0;
         $chartRoleSalary[$rName] = 0;
@@ -88,7 +87,7 @@ foreach ($employeeAdmins as $emp) {
 sort($uniqueStores);
 $employeesJson = htmlspecialchars(json_encode($empArrayForJs, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
 
-// Định dạng dữ liệu cho Javascript
+// Định dạng dữ liệu cho JS
 $chartLabels = array_keys($chartRoleCount);
 $chartDataCount = array_values($chartRoleCount);
 $chartDataSalary = array_values($chartRoleSalary);
@@ -349,11 +348,11 @@ $chartDataSalary = array_values($chartRoleSalary);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // --- KHỞI TẠO BIỂU ĐỒ THÔNG MINH (CHỐNG LỖI AJAX) ---
+        
         function initEmployeeCharts() {
             const bgColors = ['#0dcaf0', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14'];
             
-            // 1. Biểu đồ tròn: Cơ cấu nhân sự
+            // Biểu đồ tròn: Cơ cấu nhân sự
             const roleCanvas = document.getElementById('roleCountChart');
             if (roleCanvas) {
                 if (window.roleChartInstance) window.roleChartInstance.destroy();
@@ -371,7 +370,7 @@ $chartDataSalary = array_values($chartRoleSalary);
                 });
             }
 
-            // 2. Biểu đồ cột: Quỹ lương
+            //Biểu đồ cột: Quỹ lương
             const salaryCanvas = document.getElementById('salaryChart');
             if (salaryCanvas) {
                 if (window.salaryChartInstance) window.salaryChartInstance.destroy();
@@ -403,9 +402,9 @@ $chartDataSalary = array_values($chartRoleSalary);
             script.onload = initEmployeeCharts; // Tải xong mới vẽ
             document.head.appendChild(script);
         } else {
-            initEmployeeCharts(); // Đã có thư viện thì vẽ luôn
+            initEmployeeCharts();
         }
-        // -------------------------
+      
 
         var employeesData = [];
         try {
@@ -431,11 +430,11 @@ $chartDataSalary = array_values($chartRoleSalary);
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) { 
-                        alert('✅ Đã xóa thành công!'); location.reload(); 
+                        alert(' Đã xóa thành công!'); location.reload(); 
                     } else { 
-                        alert('❌ Lỗi: ' + data.message); 
+                        alert(' Lỗi: ' + data.message); 
                     }
-                }).catch(err => alert('❌ Lỗi kết nối máy chủ!'));
+                }).catch(err => alert('Lỗi kết nối máy chủ!'));
             }
         }
 

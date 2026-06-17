@@ -6,7 +6,7 @@ $cartController = new CartController();
 $customerId = $_SESSION['CustomerId'] ?? 0;
 
 $action = $_POST['action'] ?? '';
-
+// xóa sản phẩm
 if ($action === 'remove') {
     $productId = intval($_POST['productId']);
     $storeId = intval($_POST['storeId']);
@@ -14,7 +14,7 @@ if ($action === 'remove') {
     echo json_encode(['success' => $success]);
     exit;
 }
-
+// cập nhật số lượng
 if ($action === 'update_quantity') {
     $productId = intval($_POST['productId']);
     $storeId = intval($_POST['storeId']);

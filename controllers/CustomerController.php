@@ -11,7 +11,6 @@ if (!class_exists('CustomerController')) {
         {
             require __DIR__ . '/../env.php'; 
             
-            // Khởi tạo kết nối trực tiếp bằng các biến từ env.php
             if ($connection) {
                 $this->conn = $connection;
             } else {
@@ -40,7 +39,7 @@ if (!class_exists('CustomerController')) {
             $stmt->close();
             return $customerId;
         }
-
+            // lấy chi tiết thông tin khách hàng
         public function getCustomerById($id)
         {
             $sql = "SELECT * FROM customer WHERE Id = ?";
@@ -82,7 +81,7 @@ if (!class_exists('CustomerController')) {
             $stmt->close();
             return $count;
         }
-
+        // đăng nhập
         public function signUp($customer)
         {
             $sql = "INSERT INTO customer 
@@ -110,7 +109,7 @@ if (!class_exists('CustomerController')) {
             $stmt->close();
             return $result;
         }
-
+        // sửa thông tin khách hàng
         public function updateCustomer($customer)
         {
             $sql = "UPDATE customer SET 
@@ -132,7 +131,7 @@ if (!class_exists('CustomerController')) {
             return $result;
         }
 
-      
+        // đổi mật khẩu
         public function changePassword($customer)
         {
             global $hostname, $username, $password, $dbname, $port;

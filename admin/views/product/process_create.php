@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product->CategoryId = (int)($_POST['category_id'] ?? 0);
     $product->Rate = 0; // Default rate
     
-    // Get store IDs
+    // chi nhánh cửa hàng
     $storeIds = isset($_POST['store_ids']) && is_array($_POST['store_ids']) ? array_map('intval', $_POST['store_ids']) : [];
     
     // Handle image upload
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $newProductId = $controller->addProduct($product);
     if ($newProductId > 0) {
-        // Add product to stores
+        // thêm sản phẩm
         $controller->addProductToStore($newProductId, $storeIds);
         $_SESSION['success_message'] = 'Thêm sản phẩm thành công';
     } else {
