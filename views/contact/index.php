@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // Thông tin tài khoản gửi
                     $mail->Username   = 'kinxedo78@gmail.com';  
-                    $mail->Password   = 'wdba jryq toni abjo';      
+                    $mail->Password   = '';      
                     
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; 
                     $mail->Port       = 587;
